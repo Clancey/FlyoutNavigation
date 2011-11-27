@@ -16,18 +16,18 @@ namespace FlyOutNavigation
 			set{ 
 				if(tintColor == value)
 					return;
-				navigation.SearchBarTintColor = value;
+				//navigation.SearchBarTintColor = value;
 			}
 		}
 		DialogViewController navigation;
 		UIView mainView;
 		UIView currentView;
+		public Action SelectedIndexChanged {get;set;}
 		const int menuWidth = 250;
 		
 		public FlyOutNavigationController ()
 		{
 			navigation = new DialogViewController(UITableViewStyle.Plain,null);
-			navigation.EnableSearch = true;
 			navigation.OnSelection = NavigationItemSelected;
 			TintColor = UIColor.Black;
 			var navFrame = navigation.View.Frame;
@@ -58,15 +58,20 @@ namespace FlyOutNavigation
 		}
 		
 		private void NavigationItemSelected(NSIndexPath indexPath){
-			Console.WriteLine(indexPath);
-			SelectedIndex = GetIndex(indexPath);
-			Console.WriteLine(SelectedIndex);
+			//Console.WriteLine(indexPath);
+			var index =  GetIndex(indexPath);
+			//if(SelectedIndex == index)
+			//	return;
+			SelectedIndex = index;
+			//Console.WriteLine(SelectedIndex);
 			if(currentView != null)
 				currentView.RemoveFromSuperview();
 			currentView = ViewControllers[SelectedIndex].View;
 			currentView.Frame = mainView.Bounds;
 			mainView.AddSubview(currentView);
 			HideMenu();
+			if(SelectedIndexChanged != null)
+				SelectedIndexChanged();
 		}
 		
 		bool isOpen;
@@ -86,6 +91,7 @@ namespace FlyOutNavigation
 		{
 			isOpen = true;
 			UIView.BeginAnimations("slideMenu");
+			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 			//UIView.SetAnimationDuration(2);
 			var frame = mainView.Frame;
 			frame.X = menuWidth;
@@ -98,6 +104,7 @@ namespace FlyOutNavigation
 			isOpen = false;
 			navigation.FinishSearch();
 			UIView.BeginAnimations("slideMenu");
+			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseOut);
 			var frame = mainView.Frame;
 			frame.X = 0;
 			mainView.Frame = frame;
