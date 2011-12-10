@@ -4,6 +4,8 @@ using MonoTouch.Dialog;
 using System.Collections.Generic;
 using System.Linq;
 using MonoTouch.Foundation;
+using System.Drawing;
+using MonoTouch.CoreAnimation;
 
 namespace FlyOutNavigation
 {
@@ -16,12 +18,13 @@ namespace FlyOutNavigation
 			set{ 
 				if(tintColor == value)
 					return;
-				//navigation.SearchBarTintColor = value;
+				SearchBar.TintColor = value;
 			}
 		}
+		
 		DialogViewController navigation;
 		UIView mainView;
-		UIView currentView;
+		public UISearchBar SearchBar;
 		public Action SelectedIndexChanged {get;set;}
 		const int menuWidth = 250;
 		
@@ -29,19 +32,19 @@ namespace FlyOutNavigation
 		{
 			navigation = new DialogViewController(UITableViewStyle.Plain,null);
 			navigation.OnSelection = NavigationItemSelected;
-			TintColor = UIColor.Black;
 			var navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			navigation.View.Frame = navFrame;
 			this.View.AddSubview(navigation.View);
-			var mainFrame = View.Bounds;
-			//mainFrame.X = menuWidth;
-			mainView = new UIView(mainFrame);
-			mainView.BackgroundColor = UIColor.Blue;
-			mainView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
-			mainView.Layer.ShadowColor = UIColor.Black.CGColor;
-			mainView.Layer.ShadowOpacity = .75f;
-			this.View.AddSubview(mainView);
+			SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
+			//Delegate = new SearchDelegate (this),
+			TintColor = this.TintColor
+				};
+			
+			TintColor = UIColor.Black;
+			//navigation.TableView.TableHeaderView = SearchBar;
+			navigation.TableView.TableFooterView = new UIView(new RectangleF(0,0,100,100)){BackgroundColor = UIColor.Clear};
+			navigation.TableView.ScrollsToTop = false;
 		}
 		
 		public RootElement NavigationRoot {
@@ -64,11 +67,16 @@ namespace FlyOutNavigation
 			//	return;
 			SelectedIndex = index;
 			//Console.WriteLine(SelectedIndex);
-			if(currentView != null)
-				currentView.RemoveFromSuperview();
-			currentView = ViewControllers[SelectedIndex].View;
-			currentView.Frame = mainView.Bounds;
-			mainView.AddSubview(currentView);
+			if(mainView != null)
+				mainView.RemoveFromSuperview();
+			mainView = ViewControllers[SelectedIndex].View;
+			mainView.Frame = View.Bounds;
+			
+			mainView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
+			mainView.Layer.ShadowColor = UIColor.Black.CGColor;
+			mainView.Layer.ShadowOpacity = .75f;
+			
+			this.View.AddSubview(mainView);
 			HideMenu();
 			if(SelectedIndexChanged != null)
 				SelectedIndexChanged();
@@ -104,10 +112,12 @@ namespace FlyOutNavigation
 			isOpen = false;
 			navigation.FinishSearch();
 			UIView.BeginAnimations("slideMenu");
-			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseOut);
+			//UIView.SetAnimationDuration(.5);
+			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
 			var frame = mainView.Frame;
 			frame.X = 0;
-			mainView.Frame = frame;
+				mainView.Frame = frame;
+
 			UIView.CommitAnimations();
 		}
 		
