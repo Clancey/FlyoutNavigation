@@ -23,10 +23,17 @@ namespace FlyOutNavigation
 		}
 		
 		DialogViewController navigation;
-		UIView mainView;
 		public UISearchBar SearchBar;
 		public Action SelectedIndexChanged {get;set;}
 		const int menuWidth = 250;
+		public UIViewController CurrentViewController{get;private set;}
+		UIView mainView {
+			get{
+				if(CurrentViewController == null)
+					return null;
+				return CurrentViewController.View;
+			}
+		}
 		
 		public FlyOutNavigationController ()
 		{
@@ -69,8 +76,11 @@ namespace FlyOutNavigation
 			//Console.WriteLine(SelectedIndex);
 			if(mainView != null)
 				mainView.RemoveFromSuperview();
-			mainView = ViewControllers[SelectedIndex].View;
-			mainView.Frame = View.Bounds;
+			CurrentViewController = ViewControllers[SelectedIndex];
+			var frame = View.Bounds;
+			if(isOpen)
+				frame.X = menuWidth;
+			mainView.Frame = frame;
 			
 			mainView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
 			mainView.Layer.ShadowColor = UIColor.Black.CGColor;
