@@ -6,6 +6,7 @@ using System.Linq;
 using MonoTouch.Foundation;
 using System.Drawing;
 using MonoTouch.CoreAnimation;
+using MonoTouch.ObjCRuntime;
 
 namespace FlyOutNavigation
 {
@@ -26,6 +27,7 @@ namespace FlyOutNavigation
 		public UISearchBar SearchBar;
 		public Action SelectedIndexChanged {get;set;}
 		const int menuWidth = 250;
+		private UIView shadowView;
 		public UIViewController CurrentViewController{get;private set;}
 		UIView mainView {
 			get{
@@ -52,6 +54,11 @@ namespace FlyOutNavigation
 			//navigation.TableView.TableHeaderView = SearchBar;
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0,0,100,100)){BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
+			shadowView = new UIView();
+			shadowView.BackgroundColor = UIColor.White;
+			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
+			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+			shadowView.Layer.ShadowOpacity = .75f;
 		}
 		
 		public RootElement NavigationRoot {
@@ -80,11 +87,8 @@ namespace FlyOutNavigation
 			var frame = View.Bounds;
 			if(isOpen)
 				frame.X = menuWidth;
-			mainView.Frame = frame;
 			
-			mainView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
-			mainView.Layer.ShadowColor = UIColor.Black.CGColor;
-			mainView.Layer.ShadowOpacity = .75f;
+			mainView.Frame = frame;
 			
 			this.View.AddSubview(mainView);
 			HideMenu();
@@ -108,12 +112,15 @@ namespace FlyOutNavigation
 		public void ShowMenu()
 		{
 			isOpen = true;
+			shadowView.Frame = mainView.Frame;
+			this.View.InsertSubviewBelow(shadowView,mainView);
 			UIView.BeginAnimations("slideMenu");
 			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 			//UIView.SetAnimationDuration(2);
 			var frame = mainView.Frame;
 			frame.X = menuWidth;
 			mainView.Frame = frame;
+			shadowView.Frame = frame;
 			UIView.CommitAnimations();
 		}
 		
@@ -121,14 +128,21 @@ namespace FlyOutNavigation
 		{
 			isOpen = false;
 			navigation.FinishSearch();
+			//UIView.AnimationWillEnd += hideComplete;
 			UIView.BeginAnimations("slideMenu");
+			UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
 			//UIView.SetAnimationDuration(.5);
 			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
 			var frame = mainView.Frame;
 			frame.X = 0;
-				mainView.Frame = frame;
-
+			mainView.Frame = frame;
+			shadowView.Frame = frame;
 			UIView.CommitAnimations();
+		}
+		[Export("animationEnded")]
+		private void hideComplete()
+		{
+			shadowView.RemoveFromSuperview();
 		}
 		
 		public void ToggleMenu()
