@@ -28,6 +28,7 @@ namespace FlyOutNavigation
 		public Action SelectedIndexChanged {get;set;}
 		const int menuWidth = 250;
 		private UIView shadowView;
+		private UIButton closeButton;
 		public UIViewController CurrentViewController{get;private set;}
 		UIView mainView {
 			get{
@@ -59,6 +60,10 @@ namespace FlyOutNavigation
 			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF(-5,-1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
+			closeButton = new UIButton();
+			closeButton.TouchDown += delegate {
+				HideMenu();
+			};
 		}
 		
 		public RootElement NavigationRoot {
@@ -112,8 +117,10 @@ namespace FlyOutNavigation
 		public void ShowMenu()
 		{
 			isOpen = true;
+			closeButton.Frame = mainView.Frame;
 			shadowView.Frame = mainView.Frame;
 			this.View.InsertSubviewBelow(shadowView,mainView);
+			this.View.AddSubview(closeButton);
 			UIView.BeginAnimations("slideMenu");
 			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 			//UIView.SetAnimationDuration(2);
@@ -121,6 +128,7 @@ namespace FlyOutNavigation
 			frame.X = menuWidth;
 			mainView.Frame = frame;
 			shadowView.Frame = frame;
+			closeButton.Frame = frame;
 			UIView.CommitAnimations();
 		}
 		
@@ -128,6 +136,7 @@ namespace FlyOutNavigation
 		{
 			isOpen = false;
 			navigation.FinishSearch();
+			closeButton.RemoveFromSuperview();
 			//UIView.AnimationWillEnd += hideComplete;
 			UIView.BeginAnimations("slideMenu");
 			UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
