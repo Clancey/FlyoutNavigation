@@ -70,6 +70,9 @@ namespace FlyOutNavigation
 			get{return navigation.Root;}
 			set{navigation.Root = value;}
 		}
+		public UITableView NavigationTableView {
+			get{return navigation.TableView;}
+		}
 		UIViewController[] viewControllers;
 		public UIViewController[] ViewControllers {
 			get{return viewControllers;}
