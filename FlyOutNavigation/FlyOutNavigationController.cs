@@ -1,3 +1,16 @@
+//  Copyright 2011  Clancey
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
 using System;
 using MonoTouch.UIKit;
 using MonoTouch.Dialog;
@@ -83,28 +96,26 @@ namespace FlyOutNavigation
 		}
 		
 		private void NavigationItemSelected(NSIndexPath indexPath){
-			//Console.WriteLine(indexPath);
 			var index =  GetIndex(indexPath);
-			//if(SelectedIndex == index)
-			//	return;
 			SelectedIndex = index;
-			//Console.WriteLine(SelectedIndex);
-			if (ViewControllers[index] != null)
-			{
-				if(mainView != null)
-					mainView.RemoveFromSuperview();
-				CurrentViewController = ViewControllers[SelectedIndex];
-				var frame = View.Bounds;
-				if(isOpen)
-					frame.X = menuWidth;
 			
-				mainView.Frame = frame;
+			if (ViewControllers[index] == null)
+				return;
 			
-				this.View.AddSubview(mainView);
-				HideMenu();
-				if(SelectedIndexChanged != null)
-					SelectedIndexChanged();
-			}
+			if(mainView != null)
+				mainView.RemoveFromSuperview();
+			CurrentViewController = ViewControllers[SelectedIndex];
+			var frame = View.Bounds;
+			if(isOpen)
+				frame.X = menuWidth;
+		
+			mainView.Frame = frame;
+		
+			this.View.AddSubview(mainView);
+			HideMenu();
+			if(SelectedIndexChanged != null)
+				SelectedIndexChanged();
+			
 		}
 		
 		bool isOpen;
