@@ -86,19 +86,22 @@ namespace FlyOutNavigation
 			//	return;
 			SelectedIndex = index;
 			//Console.WriteLine(SelectedIndex);
-			if(mainView != null)
-				mainView.RemoveFromSuperview();
-			CurrentViewController = ViewControllers[SelectedIndex];
-			var frame = View.Bounds;
-			if(isOpen)
-				frame.X = menuWidth;
+			if (ViewControllers[index] != null)
+			{
+				if(mainView != null)
+					mainView.RemoveFromSuperview();
+				CurrentViewController = ViewControllers[SelectedIndex];
+				var frame = View.Bounds;
+				if(isOpen)
+					frame.X = menuWidth;
 			
-			mainView.Frame = frame;
+				mainView.Frame = frame;
 			
-			this.View.AddSubview(mainView);
-			HideMenu();
-			if(SelectedIndexChanged != null)
-				SelectedIndexChanged();
+				this.View.AddSubview(mainView);
+				HideMenu();
+				if(SelectedIndexChanged != null)
+					SelectedIndexChanged();
+			}
 		}
 		
 		bool isOpen;
