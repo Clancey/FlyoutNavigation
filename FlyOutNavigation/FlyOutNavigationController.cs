@@ -42,6 +42,8 @@ namespace FlyOutNavigation
 		const int menuWidth = 250;
 		private UIView shadowView;
 		private UIButton closeButton;
+		public bool AlwaysShowLandscapeMenuOnIpad {get;set;}
+		public bool ForceMenuOpen {get;set;}
 		public UIViewController CurrentViewController{get;private set;}
 		UIView mainView {
 			get{
@@ -77,6 +79,22 @@ namespace FlyOutNavigation
 			closeButton.TouchDown += delegate {
 				HideMenu();
 			};
+			AlwaysShowLandscapeMenuOnIpad = true;
+			
+			this.View.AddGestureRecognizer(new UISwipeGestureRecognizer(this,new Selector("swiperight")){Direction = UISwipeGestureRecognizerDirection.Right});
+		}
+				
+		[Export("swiperight")]
+		public void Swipped(UISwipeGestureRecognizer sender)
+		{
+			ShowMenu();
+		}
+		public override void ViewWillAppear (bool animated)
+		{			
+			var navFrame = navigation.View.Frame;
+			navFrame.Width = menuWidth;
+			navigation.View.Frame = navFrame;
+			base.ViewWillAppear (animated);
 		}
 		
 		public RootElement NavigationRoot {
@@ -97,8 +115,13 @@ namespace FlyOutNavigation
 		
 		private void NavigationItemSelected(NSIndexPath indexPath){
 			var index =  GetIndex(indexPath);
-			SelectedIndex = index;
+			NavigationItemSelected(index);
 			
+		}		
+		private void NavigationItemSelected(int index){
+			selectedIndex = index;			
+			if(viewControllers == null || viewControllers.Length < index || index < 0)
+				return;
 			if (ViewControllers[index] == null)
 				return;
 			
@@ -110,9 +133,11 @@ namespace FlyOutNavigation
 				frame.X = menuWidth;
 		
 			mainView.Frame = frame;
+			setViewSize();
 		
 			this.View.AddSubview(mainView);
-			HideMenu();
+			if(!ShouldStayOpen)
+				HideMenu();
 			if(SelectedIndexChanged != null)
 				SelectedIndexChanged();
 			
@@ -137,16 +162,41 @@ namespace FlyOutNavigation
 			closeButton.Frame = mainView.Frame;
 			shadowView.Frame = mainView.Frame;
 			this.View.InsertSubviewBelow(shadowView,mainView);
-			this.View.AddSubview(closeButton);
+			if(!ShouldStayOpen)
+				this.View.AddSubview(closeButton);
 			UIView.BeginAnimations("slideMenu");
 			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 			//UIView.SetAnimationDuration(2);
+			setViewSize();
 			var frame = mainView.Frame;
 			frame.X = menuWidth;
 			mainView.Frame = frame;
+			setViewSize();
+			frame = mainView.Frame;
 			shadowView.Frame = frame;
 			closeButton.Frame = frame;
 			UIView.CommitAnimations();
+		}
+		bool ShouldStayOpen
+		{
+			get{
+				if(ForceMenuOpen || (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad && 
+				AlwaysShowLandscapeMenuOnIpad && 
+				(this.InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft 
+				|| this.InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
+					return true;
+				return false;	
+			}
+		}
+		private void setViewSize()
+		{
+			var frame = View.Bounds;
+			frame.Location = mainView.Frame.Location;
+			if(ShouldStayOpen)
+				frame.Width -= menuWidth;
+			mainView.Frame = frame;
+			
+				
 		}
 		
 		public void HideMenu()
@@ -159,7 +209,7 @@ namespace FlyOutNavigation
 			UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
 			//UIView.SetAnimationDuration(.5);
 			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-			var frame = mainView.Frame;
+			var frame = this.View.Bounds;
 			frame.X = 0;
 			mainView.Frame = frame;
 			shadowView.Frame = frame;
@@ -178,10 +228,16 @@ namespace FlyOutNavigation
 			else
 				ShowMenu();
 		}
-		
+		private int selectedIndex;
 		public int SelectedIndex
 		{
-			get;set;
+			get{return selectedIndex;}
+			set{
+				if(selectedIndex == value)
+					return;
+				selectedIndex = value;
+				NavigationItemSelected(value);
+			}
 		}
 		
 		private int GetIndex(NSIndexPath indexPath)
@@ -209,6 +265,27 @@ namespace FlyOutNavigation
 			
 			var row = index - currentCount;
 			return NSIndexPath.FromRowSection(row,section);
+		}
+		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
+		{
+			return true;
+		}
+		public override void DidRotate (UIInterfaceOrientation fromInterfaceOrientation)
+		{
+			base.DidRotate (fromInterfaceOrientation);
+			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone) 
+				return;
+			switch(InterfaceOrientation)
+			{
+			case UIInterfaceOrientation.LandscapeLeft:
+			case UIInterfaceOrientation.LandscapeRight:
+				ShowMenu();
+				return;
+			default:
+				HideMenu();
+				return;
+			}
+			
 		}
 	}
 }
