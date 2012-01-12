@@ -20,6 +20,7 @@ using MonoTouch.Foundation;
 using System.Drawing;
 using MonoTouch.CoreAnimation;
 using MonoTouch.ObjCRuntime;
+using MonoTouch.MediaPlayer;
 
 namespace FlyOutNavigation
 {
@@ -81,7 +82,7 @@ namespace FlyOutNavigation
 			};
 			AlwaysShowLandscapeMenuOnIpad = true;
 			
-			this.View.AddGestureRecognizer(new UISwipeGestureRecognizer(this,new Selector("swiperight")){Direction = UISwipeGestureRecognizerDirection.Right});
+			this.View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this,new Selector("swiperight")));
 		}
 				
 		[Export("swiperight")]
@@ -266,9 +267,10 @@ namespace FlyOutNavigation
 			var row = index - currentCount;
 			return NSIndexPath.FromRowSection(row,section);
 		}
+		public bool DisableRotation {get;set;}
 		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
 		{
-			return true;
+			return !DisableRotation;
 		}
 		public override void DidRotate (UIInterfaceOrientation fromInterfaceOrientation)
 		{
@@ -286,6 +288,14 @@ namespace FlyOutNavigation
 				return;
 			}
 			
+		}
+		public override void ViewWillDisappear (bool animated)
+		{
+			if(!IsIos5 && CurrentViewController != null)
+				CurrentViewController.ViewWillAppear(animated);
+		}
+		public static bool IsIos5 {
+			get{ return new System.Version(UIDevice.CurrentDevice.SystemVersion).Major >= 5 ;}
 		}
 	}
 }
