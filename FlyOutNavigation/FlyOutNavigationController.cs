@@ -57,7 +57,7 @@ namespace FlyOutNavigation
 		public FlyOutNavigationController ()
 		{
 			navigation = new DialogViewController(UITableViewStyle.Plain,null);
-			navigation.OnSelection = NavigationItemSelected;
+			navigation.OnSelection += NavigationItemSelected;
 			var navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			navigation.View.Frame = navFrame;
