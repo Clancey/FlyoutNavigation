@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
+    <Reference Include="MonoTouch.Dialog-1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -69,16 +70,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Content Include="jhill.jpeg" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\FlyOutNavigation\FlyOutNavigation.csproj">
       <Project>{E98F7600-6C2E-4586-A78C-D42BA89445B9}</Project>
       <Name>FlyOutNavigation</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\MonoTouch.Dialog\MonoTouch.Dialog\MonoTouch.Dialog.csproj">
-      <Project>{3FFBFFF8-5560-4EDE-82E5-3FFDFBBA8A50}</Project>
-      <Name>MonoTouch.Dialog</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="jhill.jpeg" />
   </ItemGroup>
 </Project>

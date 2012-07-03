@@ -40,11 +40,12 @@ namespace FlyOutNavigation
 		DialogViewController navigation;
 		public UISearchBar SearchBar;
 		public Action SelectedIndexChanged {get;set;}
-		const int menuWidth = 250;
+		public const int menuWidth = 250;
 		private UIView shadowView;
 		private UIButton closeButton;
-		public bool AlwaysShowLandscapeMenuOnIpad {get;set;}
+		public bool AlwaysShowLandscapeMenu {get;set;}
 		public bool ForceMenuOpen {get;set;}
+		public bool HideShadow{get;set;}
 		public UIViewController CurrentViewController{get;private set;}
 		UIView mainView {
 			get{
@@ -80,27 +81,37 @@ namespace FlyOutNavigation
 			closeButton.TouchDown += delegate {
 				HideMenu();
 			};
-			AlwaysShowLandscapeMenuOnIpad = true;
+			AlwaysShowLandscapeMenu = true;
 			
 			this.View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this,new Selector("swiperight")));
 		}
-				
+			
+		public override void ViewDidLayoutSubviews ()
+		{
+			base.ViewDidLayoutSubviews ();
+			var navFrame = navigation.View.Frame;
+			navFrame.Width = menuWidth;
+			if(navigation.View.Frame != navFrame)
+				navigation.View.Frame = navFrame;
+		}
 		[Export("swiperight")]
 		public void Swipped(UISwipeGestureRecognizer sender)
 		{
-			ShowMenu();
+			if(!ShouldStayOpen)
+				ShowMenu();
 		}
 		public override void ViewWillAppear (bool animated)
 		{			
 			var navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
+			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			base.ViewWillAppear (animated);
 		}
 		
 		public RootElement NavigationRoot {
 			get{return navigation.Root;}
-			set{navigation.Root = value;}
+		set{EnsureInvokedOnMainThread(delegate{navigation.Root = value;});}
 		}
 		public UITableView NavigationTableView {
 			get{return navigation.TableView;}
@@ -109,8 +120,10 @@ namespace FlyOutNavigation
 		public UIViewController[] ViewControllers {
 			get{return viewControllers;}
 			set{
-				viewControllers = value;
-				NavigationItemSelected(GetIndexPath(SelectedIndex));
+				EnsureInvokedOnMainThread(delegate{
+					viewControllers = value;
+					NavigationItemSelected(GetIndexPath(SelectedIndex));
+				});
 			}
 		}
 		
@@ -121,10 +134,18 @@ namespace FlyOutNavigation
 		}		
 		private void NavigationItemSelected(int index){
 			selectedIndex = index;			
-			if(viewControllers == null || viewControllers.Length < index || index < 0)
+			if(viewControllers == null || viewControllers.Length <= index || index < 0)
+			{
+				if(SelectedIndexChanged != null)
+					SelectedIndexChanged();
 				return;
+			}
 			if (ViewControllers[index] == null)
+			{
+				if(SelectedIndexChanged != null)
+					SelectedIndexChanged();
 				return;
+			}
 			
 			if(mainView != null)
 				mainView.RemoveFromSuperview();
@@ -159,30 +180,35 @@ namespace FlyOutNavigation
 		
 		public void ShowMenu()
 		{
-			isOpen = true;
-			closeButton.Frame = mainView.Frame;
-			shadowView.Frame = mainView.Frame;
-			this.View.InsertSubviewBelow(shadowView,mainView);
-			if(!ShouldStayOpen)
-				this.View.AddSubview(closeButton);
-			UIView.BeginAnimations("slideMenu");
-			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
-			//UIView.SetAnimationDuration(2);
-			setViewSize();
-			var frame = mainView.Frame;
-			frame.X = menuWidth;
-			mainView.Frame = frame;
-			setViewSize();
-			frame = mainView.Frame;
-			shadowView.Frame = frame;
-			closeButton.Frame = frame;
-			UIView.CommitAnimations();
+			if(isOpen)
+				return;
+			EnsureInvokedOnMainThread(delegate{
+				isOpen = true;
+				closeButton.Frame = mainView.Frame;
+				shadowView.Frame = mainView.Frame;
+				if(!HideShadow)
+					this.View.InsertSubviewBelow(shadowView,mainView);
+				if(!ShouldStayOpen)
+					this.View.AddSubview(closeButton);
+				UIView.BeginAnimations("slideMenu");
+				UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
+				//UIView.SetAnimationDuration(2);
+				setViewSize();
+				var frame = mainView.Frame;
+				frame.X = menuWidth;
+				mainView.Frame = frame;
+				setViewSize();
+				frame = mainView.Frame;
+				shadowView.Frame = frame;
+				closeButton.Frame = frame;
+				UIView.CommitAnimations();
+			});
 		}
 		bool ShouldStayOpen
 		{
 			get{
 				if(ForceMenuOpen || (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad && 
-				AlwaysShowLandscapeMenuOnIpad && 
+				AlwaysShowLandscapeMenu && 
 				(this.InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft 
 				|| this.InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
 					return true;
@@ -202,19 +228,24 @@ namespace FlyOutNavigation
 		
 		public void HideMenu()
 		{
-			isOpen = false;
-			navigation.FinishSearch();
-			closeButton.RemoveFromSuperview();
-			//UIView.AnimationWillEnd += hideComplete;
-			UIView.BeginAnimations("slideMenu");
-			UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
-			//UIView.SetAnimationDuration(.5);
-			UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-			var frame = this.View.Bounds;
-			frame.X = 0;
-			mainView.Frame = frame;
-			shadowView.Frame = frame;
-			UIView.CommitAnimations();
+			if(!IsOpen)
+				return;
+			EnsureInvokedOnMainThread(delegate{
+				isOpen = false;
+				navigation.FinishSearch();
+				closeButton.RemoveFromSuperview();
+				shadowView.Frame = mainView.Frame;
+				//UIView.AnimationWillEnd += hideComplete;
+				UIView.BeginAnimations("slideMenu");
+				UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
+				//UIView.SetAnimationDuration(.5);
+				UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
+				var frame = this.View.Bounds;
+				frame.X = 0;
+				mainView.Frame = frame;
+				shadowView.Frame = frame;
+				UIView.CommitAnimations();
+			});
 		}
 		[Export("animationEnded")]
 		private void hideComplete()
@@ -224,10 +255,12 @@ namespace FlyOutNavigation
 		
 		public void ToggleMenu()
 		{
-			if(isOpen)
-				HideMenu();
-			else
-				ShowMenu();
+			EnsureInvokedOnMainThread(delegate{
+				if(isOpen)
+					HideMenu();
+				else
+					ShowMenu();
+			});
 		}
 		private int selectedIndex;
 		public int SelectedIndex
@@ -237,7 +270,9 @@ namespace FlyOutNavigation
 				if(selectedIndex == value)
 					return;
 				selectedIndex = value;
-				NavigationItemSelected(value);
+				EnsureInvokedOnMainThread(delegate{
+					NavigationItemSelected(value);
+				});
 			}
 		}
 		
@@ -270,11 +305,22 @@ namespace FlyOutNavigation
 		public bool DisableRotation {get;set;}
 		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
 		{
-			return !DisableRotation;
+			if(DisableRotation)
+				return false;
+			
+			var theReturn= CurrentViewController == null? true: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+			return theReturn;
+		}
+		public override void WillRotate (UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillRotate (toInterfaceOrientation, duration);
+			if(CurrentViewController != null)
+				CurrentViewController.WillRotate(toInterfaceOrientation,duration);
 		}
 		public override void DidRotate (UIInterfaceOrientation fromInterfaceOrientation)
 		{
 			base.DidRotate (fromInterfaceOrientation);
+			CurrentViewController.DidRotate(fromInterfaceOrientation);
 			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone) 
 				return;
 			switch(InterfaceOrientation)
@@ -289,10 +335,27 @@ namespace FlyOutNavigation
 			}
 			
 		}
+		private void EnsureInvokedOnMainThread (Action action)
+		{
+			if (IsMainThread ())
+			{
+				action ();
+				return;
+			}
+			this.BeginInvokeOnMainThread (() => action());
+		}
+		private static IntPtr GetClassHandle (string clsName)
+		{
+			return (new Class(clsName)).Handle;
+		}
+		
+		private static bool IsMainThread() {
+			return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
+		}
 		public override void ViewWillDisappear (bool animated)
 		{
 			if(!IsIos5 && CurrentViewController != null)
-				CurrentViewController.ViewWillAppear(animated);
+				CurrentViewController.ViewWillDisappear(animated);
 		}
 		public static bool IsIos5 {
 			get{ return new System.Version(UIDevice.CurrentDevice.SystemVersion).Major >= 5 ;}

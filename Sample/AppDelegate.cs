@@ -28,7 +28,7 @@ namespace Sample
 		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
 		{
 			window = new UIWindow (UIScreen.MainScreen.Bounds);
-			
+			UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.BlackTranslucent;
 			viewController = new FlyOutNavigationController ();
 			viewController.NavigationRoot = new RootElement ("")
 			{
