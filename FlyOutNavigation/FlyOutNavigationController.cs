@@ -252,10 +252,22 @@ namespace FlyOutNavigation
 		{
 			shadowView.RemoveFromSuperview();
 		}
+
+		public void ResignFirstResponders(UIView view)
+		{
+			foreach(var subview in view.Subviews)
+			{
+				if (subview.IsFirstResponder)
+					subview.ResignFirstResponder();
+				ResignFirstResponders(subview);
+			}
+		}
 		
 		public void ToggleMenu()
 		{
 			EnsureInvokedOnMainThread(delegate{
+				if(!isOpen && CurrentViewController != null && CurrentViewController.IsViewLoaded)
+					ResignFirstResponders(CurrentViewController.View);
 				if(isOpen)
 					HideMenu();
 				else
