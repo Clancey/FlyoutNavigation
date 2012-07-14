@@ -347,6 +347,14 @@ namespace FlyOutNavigation
 			}
 			
 		}
+
+		public override void WillAnimateRotation (UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillAnimateRotation (toInterfaceOrientation, duration);
+			if(CurrentViewController != null)
+				CurrentViewController.WillAnimateRotation(toInterfaceOrientation, duration);
+		}
+
 		private void EnsureInvokedOnMainThread (Action action)
 		{
 			if (IsMainThread ())
