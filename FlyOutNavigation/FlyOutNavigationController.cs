@@ -64,9 +64,9 @@ namespace FlyOutNavigation
 			navigation.View.Frame = navFrame;
 			this.View.AddSubview(navigation.View);
 			SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
-			//Delegate = new SearchDelegate (this),
-			TintColor = this.TintColor
-				};
+				//Delegate = new SearchDelegate (this),
+				TintColor = this.TintColor
+			};
 			
 			TintColor = UIColor.Black;
 			//navigation.TableView.TableHeaderView = SearchBar;
@@ -85,7 +85,7 @@ namespace FlyOutNavigation
 			
 			this.View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this,new Selector("swiperight")));
 		}
-			
+		
 		public override void ViewDidLayoutSubviews ()
 		{
 			base.ViewDidLayoutSubviews ();
@@ -100,6 +100,7 @@ namespace FlyOutNavigation
 			if(!ShouldStayOpen)
 				ShowMenu();
 		}
+		bool firstLaunch = true;
 		public override void ViewWillAppear (bool animated)
 		{			
 			var navFrame = navigation.View.Frame;
@@ -107,11 +108,16 @@ namespace FlyOutNavigation
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			base.ViewWillAppear (animated);
+			if(firstLaunch)
+			{
+				//	this.DidRotate(UIInterfaceOrientation.Portrait);
+				firstLaunch = false;
+			}
 		}
 		
 		public RootElement NavigationRoot {
 			get{return navigation.Root;}
-		set{EnsureInvokedOnMainThread(delegate{navigation.Root = value;});}
+			set{EnsureInvokedOnMainThread(delegate{navigation.Root = value;});}
 		}
 		public UITableView NavigationTableView {
 			get{return navigation.TableView;}
@@ -151,12 +157,12 @@ namespace FlyOutNavigation
 				mainView.RemoveFromSuperview();
 			CurrentViewController = ViewControllers[SelectedIndex];
 			var frame = View.Bounds;
-			if(isOpen)
+			if(isOpen || ShouldStayOpen)
 				frame.X = menuWidth;
-		
-			mainView.Frame = frame;
+			
 			setViewSize();
-		
+			SetLocation(frame);
+			
 			this.View.AddSubview(mainView);
 			if(!ShouldStayOpen)
 				HideMenu();
@@ -196,7 +202,7 @@ namespace FlyOutNavigation
 				setViewSize();
 				var frame = mainView.Frame;
 				frame.X = menuWidth;
-				mainView.Frame = frame;
+				SetLocation(frame);
 				setViewSize();
 				frame = mainView.Frame;
 				shadowView.Frame = frame;
@@ -208,9 +214,9 @@ namespace FlyOutNavigation
 		{
 			get{
 				if(ForceMenuOpen || (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad && 
-				AlwaysShowLandscapeMenu && 
-				(this.InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft 
-				|| this.InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
+				                     AlwaysShowLandscapeMenu && 
+				                     (this.InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft 
+				 || this.InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
 					return true;
 				return false;	
 			}
@@ -218,12 +224,22 @@ namespace FlyOutNavigation
 		private void setViewSize()
 		{
 			var frame = View.Bounds;
-			frame.Location = mainView.Frame.Location;
+			//frame.Location = PointF.Empty;
 			if(ShouldStayOpen)
 				frame.Width -= menuWidth;
-			mainView.Frame = frame;
-			
-				
+			if(mainView.Bounds == frame)
+				return;
+			mainView.Bounds = frame;
+		}
+		private void SetLocation(RectangleF frame)
+		{
+			frame.Y = 0;
+			if(mainView.Frame.Location == frame.Location)
+				return;
+			frame.Size = mainView.Frame.Size;
+			var center = new PointF(frame.Left + frame.Width/2,
+			                        frame.Top + frame.Height / 2);
+			mainView.Center = center;
 		}
 		
 		public void HideMenu()
@@ -242,7 +258,8 @@ namespace FlyOutNavigation
 				UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
 				var frame = this.View.Bounds;
 				frame.X = 0;
-				mainView.Frame = frame;
+				setViewSize();
+				SetLocation(frame);
 				shadowView.Frame = frame;
 				UIView.CommitAnimations();
 			});
@@ -345,6 +362,7 @@ namespace FlyOutNavigation
 				HideMenu();
 				return;
 			}
+			setViewSize();
 			
 		}
 
