@@ -110,7 +110,7 @@ namespace FlyOutNavigation
 			base.ViewWillAppear (animated);
 			if(firstLaunch)
 			{
-				//	this.DidRotate(UIInterfaceOrientation.Portrait);
+				this.DidRotate(UIInterfaceOrientation.Portrait);
 				firstLaunch = false;
 			}
 		}
@@ -380,15 +380,14 @@ namespace FlyOutNavigation
 				action ();
 				return;
 			}
-			this.BeginInvokeOnMainThread (() => action());
+			this.BeginInvokeOnMainThread (() => 
+			                              action()
+			                              );
 		}
-		private static IntPtr GetClassHandle (string clsName)
-		{
-			return (new Class(clsName)).Handle;
-		}
-		
+
 		private static bool IsMainThread() {
-			return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
+			return NSThread.Current.IsMainThread;
+			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
 		}
 		public override void ViewWillDisappear (bool animated)
 		{
