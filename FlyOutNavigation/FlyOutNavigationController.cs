@@ -108,11 +108,6 @@ namespace FlyOutNavigation
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			base.ViewWillAppear (animated);
-			if(firstLaunch)
-			{
-				this.DidRotate(UIInterfaceOrientation.Portrait);
-				firstLaunch = false;
-			}
 		}
 		
 		public RootElement NavigationRoot {
@@ -164,6 +159,7 @@ namespace FlyOutNavigation
 			SetLocation(frame);
 			
 			this.View.AddSubview(mainView);
+			this.AddChildViewController (CurrentViewController);
 			if(!ShouldStayOpen)
 				HideMenu();
 			if(SelectedIndexChanged != null)
@@ -343,13 +339,11 @@ namespace FlyOutNavigation
 		public override void WillRotate (UIInterfaceOrientation toInterfaceOrientation, double duration)
 		{
 			base.WillRotate (toInterfaceOrientation, duration);
-			if(CurrentViewController != null)
-				CurrentViewController.WillRotate(toInterfaceOrientation,duration);
 		}
 		public override void DidRotate (UIInterfaceOrientation fromInterfaceOrientation)
 		{
 			base.DidRotate (fromInterfaceOrientation);
-			CurrentViewController.DidRotate(fromInterfaceOrientation);
+
 			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone) 
 				return;
 			switch(InterfaceOrientation)
@@ -369,8 +363,6 @@ namespace FlyOutNavigation
 		public override void WillAnimateRotation (UIInterfaceOrientation toInterfaceOrientation, double duration)
 		{
 			base.WillAnimateRotation (toInterfaceOrientation, duration);
-			if(CurrentViewController != null)
-				CurrentViewController.WillAnimateRotation(toInterfaceOrientation, duration);
 		}
 
 		private void EnsureInvokedOnMainThread (Action action)
@@ -388,11 +380,6 @@ namespace FlyOutNavigation
 		private static bool IsMainThread() {
 			return NSThread.Current.IsMainThread;
 			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
-		}
-		public override void ViewWillDisappear (bool animated)
-		{
-			if(!IsIos5 && CurrentViewController != null)
-				CurrentViewController.ViewWillDisappear(animated);
 		}
 		public static bool IsIos5 {
 			get{ return new System.Version(UIDevice.CurrentDevice.SystemVersion).Major >= 5 ;}
