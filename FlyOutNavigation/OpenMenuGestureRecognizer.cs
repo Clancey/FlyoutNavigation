@@ -22,13 +22,15 @@ namespace FlyOutNavigation
 {
 	public class OpenMenuGestureRecognizer : UISwipeGestureRecognizer
 	{
-		public OpenMenuGestureRecognizer (NSObject target, Selector action) : base(target,action)
+		FlyOutNavigationController Parent;
+		public OpenMenuGestureRecognizer (NSObject target, Selector action,FlyOutNavigationController parent) : base(target,action)
 		{
+			Parent = parent;
 			this.Direction = UISwipeGestureRecognizerDirection.Right;
 			this.ShouldReceiveTouch += (sender,touch)=> {
 				if(touch.View is UISlider || touch.View is MPVolumeView)
 					return false;
-				return true;
+				return Parent.shouldReceiveTouch(sender,touch);
 			};
 		}
 	}

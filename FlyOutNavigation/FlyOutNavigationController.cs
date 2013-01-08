@@ -83,9 +83,18 @@ namespace FlyOutNavigation
 			};
 			AlwaysShowLandscapeMenu = true;
 			
-			this.View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this,new Selector("swiperight")));
+			this.View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this,new Selector("swiperight"),this));
+			//this.View.AddGestureRecognizer (new UIPanGestureRecognizer (DragContentView));
 		}
-		
+
+		public event UITouchEventArgs ShouldReceiveTouch;
+		internal bool shouldReceiveTouch(UIGestureRecognizer gesture, UITouch touch)
+		{
+			if(ShouldReceiveTouch != null)
+				return ShouldReceiveTouch(gesture, touch);
+			return true;
+		}
+
 		public override void ViewDidLayoutSubviews ()
 		{
 			base.ViewDidLayoutSubviews ();
@@ -94,6 +103,41 @@ namespace FlyOutNavigation
 			if(navigation.View.Frame != navFrame)
 				navigation.View.Frame = navFrame;
 		}
+
+		public void DragContentView(UIPanGestureRecognizer panGesture)
+		{
+			var translation = panGesture.TranslationInView (View).X;
+//				if (panGesture.State == UIGestureRecognizerState.Changed) {
+//					if (IsOpen) {
+//						if (translation > 0.0f) {
+//							_contentView.frame = CGRectOffset(_contentView.bounds, kGHRevealSidebarWidth, 0.0f);
+//							self.sidebarShowing = YES;
+//						} else if (translation < -kGHRevealSidebarWidth) {
+//							_contentView.frame = _contentView.bounds;
+//							self.sidebarShowing = NO;
+//						} else {
+//							_contentView.frame = CGRectOffset(_contentView.bounds, (kGHRevealSidebarWidth + translation), 0.0f);
+//						}
+//					} else {
+//						if (translation < 0.0f) {
+//							_contentView.frame = _contentView.bounds;
+//							self.sidebarShowing = NO;
+//						} else if (translation > kGHRevealSidebarWidth) {
+//							_contentView.frame = CGRectOffset(_contentView.bounds, kGHRevealSidebarWidth, 0.0f);
+//							self.sidebarShowing = YES;
+//						} else {
+//							_contentView.frame = CGRectOffset(_contentView.bounds, translation, 0.0f);
+//						}
+//					}
+//				} else if (panGesture.state == UIGestureRecognizerStateEnded) {
+//					CGFloat velocity = [panGesture velocityInView:self.view].x;
+//					BOOL show = (fabs(velocity) > kGHRevealSidebarFlickVelocity)
+//						? (velocity > 0)
+//							: (translation > (kGHRevealSidebarWidth / 2));
+//					[self toggleSidebar:show duration:kGHRevealSidebarDefaultAnimationDuration];
+//					
+//				}
+			}
 		[Export("swiperight")]
 		public void Swipped(UISwipeGestureRecognizer sender)
 		{
@@ -112,7 +156,10 @@ namespace FlyOutNavigation
 		
 		public RootElement NavigationRoot {
 			get{return navigation.Root;}
-			set{EnsureInvokedOnMainThread(delegate{navigation.Root = value;});}
+			set{EnsureInvokedOnMainThread ( delegate {
+					navigation.Root = value;
+				});
+			}
 		}
 		public UITableView NavigationTableView {
 			get{return navigation.TableView;}
@@ -185,6 +232,7 @@ namespace FlyOutNavigation
 			if(isOpen)
 				return;
 			EnsureInvokedOnMainThread(delegate{
+				navigation.ReloadData();
 				isOpen = true;
 				closeButton.Frame = mainView.Frame;
 				shadowView.Frame = mainView.Frame;
@@ -314,6 +362,8 @@ namespace FlyOutNavigation
 		}
 		private NSIndexPath GetIndexPath(int index)
 		{
+			if (navigation.Root == null)
+				return NSIndexPath.FromRowSection(0, 0);
 			int currentCount = 0;
 			int section = 0;
 			foreach(var element in navigation.Root)
@@ -331,7 +381,7 @@ namespace FlyOutNavigation
 		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
 		{
 			if(DisableRotation)
-				return false;
+				return toInterfaceOrientation == InterfaceOrientation;
 			
 			var theReturn= CurrentViewController == null? true: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
 			return theReturn;
@@ -381,9 +431,7 @@ namespace FlyOutNavigation
 			return NSThread.Current.IsMainThread;
 			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
 		}
-		public static bool IsIos5 {
-			get{ return new System.Version(UIDevice.CurrentDevice.SystemVersion).Major >= 5 ;}
-		}
+
 	}
 }
 
