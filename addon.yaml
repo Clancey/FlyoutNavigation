@@ -1,0 +1,12 @@
+version: 1.1
+name: Flyout Navigation View
+id: flyoutnavigation
+publisher: James Clancey
+publisher-url: https://github.com/xamarin/addons/tree/flyout-navigation
+summary:  A sleek navigation view that swipes in from the side.
+libraries:
+    ios: FlyOutNavigation/Bin/Release/FlyOutNavigation.dll
+samples:
+    "iOS Sample": FlyOutNavigationSample/FlyOutNavigationSample.sln
+build:
+    - FlyOutNavigation.sln

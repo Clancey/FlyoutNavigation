@@ -60,6 +60,9 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="MonoTouch.Dialog-1" />
+    <Reference Include="FlyOutNavigation">
+      <HintPath>..\..\FlyOutNavigation\bin\Release\FlyOutNavigation.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -67,15 +70,10 @@
   <ItemGroup>
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
+    <Compile Include="MainController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Content Include="jhill.jpeg" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FlyOutNavigation\FlyOutNavigation.csproj">
-      <Project>{E98F7600-6C2E-4586-A78C-D42BA89445B9}</Project>
-      <Name>FlyOutNavigation</Name>
-    </ProjectReference>
+    <BundleResource Include="Default-568h%402x.png" />
   </ItemGroup>
 </Project>
