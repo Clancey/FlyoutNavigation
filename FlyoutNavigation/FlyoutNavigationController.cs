@@ -22,9 +22,9 @@ using MonoTouch.CoreAnimation;
 using MonoTouch.ObjCRuntime;
 using MonoTouch.MediaPlayer;
 
-namespace FlyOutNavigation
+namespace FlyoutNavigation
 {
-	public class FlyOutNavigationController : UIViewController
+	public class FlyoutNavigationController : UIViewController
 	{
 		UIColor tintColor;
 		public UIColor TintColor
@@ -55,7 +55,7 @@ namespace FlyOutNavigation
 			}
 		}
 		
-		public FlyOutNavigationController ()
+		public FlyoutNavigationController ()
 		{
 			navigation = new DialogViewController(UITableViewStyle.Plain,null);
 			navigation.OnSelection += NavigationItemSelected;

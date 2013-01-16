@@ -6,7 +6,7 @@ using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 using MonoTouch.Dialog;
 
-using FlyOutNavigation;
+using FlyoutNavigation;
 
 namespace Sample
 {

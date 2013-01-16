@@ -40,7 +40,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Compile Include="FlyOutNavigationController.cs" />
     <Compile Include="OpenMenuGestureRecognizer.cs" />
+    <Compile Include="..\FlyOutNavigation\FlyoutNavigationController.cs" />
   </ItemGroup>
 </Project>

@@ -18,12 +18,12 @@ using MonoTouch.ObjCRuntime;
 using MonoTouch.MediaPlayer;
 using MonoTouch.Foundation;
 
-namespace FlyOutNavigation
+namespace FlyoutNavigation
 {
 	public class OpenMenuGestureRecognizer : UISwipeGestureRecognizer
 	{
-		FlyOutNavigationController Parent;
-		public OpenMenuGestureRecognizer (NSObject target, Selector action,FlyOutNavigationController parent) : base(target,action)
+		FlyoutNavigationController Parent;
+		public OpenMenuGestureRecognizer (NSObject target, Selector action,FlyoutNavigationController parent) : base(target,action)
 		{
 			Parent = parent;
 			this.Direction = UISwipeGestureRecognizerDirection.Right;

@@ -6,13 +6,13 @@ using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 using MonoTouch.Dialog;
 
-using FlyOutNavigation;
+using FlyoutNavigation;
 
 namespace Sample
 {
 	public class MainController : UIViewController
 	{
-		FlyOutNavigationController navigation;
+		FlyoutNavigationController navigation;
 		
 		// Data we'll use to create our flyout menu and views:
 		string[] Tasks = {
@@ -30,7 +30,7 @@ namespace Sample
 
 			// Create the flyout view controller, make it large,
 			// and add it as a subview:
-			navigation = new FlyOutNavigationController ();
+			navigation = new FlyoutNavigationController ();
 			navigation.View.Frame = UIScreen.MainScreen.Bounds;
 			View.AddSubview (navigation.View);
 			
@@ -51,7 +51,7 @@ namespace Sample
 		
 		class TaskPageController : DialogViewController
 		{
-			public TaskPageController (FlyOutNavigationController navigation, string title) : base (null)
+			public TaskPageController (FlyoutNavigationController navigation, string title) : base (null)
 			{
 				Root = new RootElement (title) {
 					new Section {
