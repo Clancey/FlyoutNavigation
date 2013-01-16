@@ -1,16 +1,16 @@
-The `FlyOutNavigationController` presents a simple navigation view that
+The `FlyoutNavigationController` presents a simple navigation view that
 appears to slide out from underneath a main view, allowing you to
 navigate among a list of view controllers. The same view also functions
 as a `UISplitViewController` on the iPad. 
 
 ```csharp
-using FlyOutNavigation;
+using FlyoutNavigation;
 using MonoTouch.Dialog;
 ...
 public override void ViewDidLoad ()
 {
 	base.ViewDidLoad ();
-	var navigation = new FlyOutNavigationController {
+	var navigation = new FlyoutNavigationController {
 		// Create the navigation menu
 		NavigationRoot = new RootElement ("Navigation") {
 			new Section ("Pages") {
