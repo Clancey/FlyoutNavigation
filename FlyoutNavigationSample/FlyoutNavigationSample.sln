@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyOutNavigationSample", "FlyOutNavigationSample\FlyOutNavigationSample.csproj", "{F7F9CC1F-0E0A-4E5D-A1B1-BB977A0CD36B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyoutNavigationSample", "FlyoutNavigationSample\FlyoutNavigationSample.csproj", "{F7F9CC1F-0E0A-4E5D-A1B1-BB977A0CD36B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyoutNavigation", "..\FlyoutNavigation\FlyoutNavigation.csproj", "{E98F7600-6C2E-4586-A78C-D42BA89445B9}"
 EndProject
@@ -41,6 +41,6 @@ Global
 		{F7F9CC1F-0E0A-4E5D-A1B1-BB977A0CD36B}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = FlyOutNavigationSample\FlyOutNavigationSample.csproj
+		StartupItem = FlyoutNavigationSample\FlyoutNavigationSample.csproj
 	EndGlobalSection
 EndGlobal
