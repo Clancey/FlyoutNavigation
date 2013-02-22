@@ -20,13 +20,12 @@ using MonoTouch.Foundation;
 
 namespace FlyoutNavigation
 {
-	public class OpenMenuGestureRecognizer : UISwipeGestureRecognizer
+	public class OpenMenuGestureRecognizer : UIPanGestureRecognizer
 	{
 		FlyoutNavigationController Parent;
 		public OpenMenuGestureRecognizer (NSObject target, Selector action,FlyoutNavigationController parent) : base(target,action)
 		{
 			Parent = parent;
-			this.Direction = UISwipeGestureRecognizerDirection.Right;
 			this.ShouldReceiveTouch += (sender,touch)=> {
 				if(touch.View is UISlider || touch.View is MPVolumeView)
 					return false;
