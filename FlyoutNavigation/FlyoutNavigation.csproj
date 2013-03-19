@@ -40,7 +40,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="OpenMenuGestureRecognizer.cs" />
-    <Compile Include="..\FlyoutNavigation\FlyoutNavigationController.cs" />
+    <Compile Include="FlyoutNavigationController.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MonoTouch.Dialog\MonoTouch.Dialog\MonoTouch.Dialog.csproj">
