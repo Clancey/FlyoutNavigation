@@ -209,12 +209,16 @@ namespace FlyoutNavigation
 					SelectedIndexChanged ();
 				return;
 			}
+
+			var isOpen = false;
 			
-			if (mainView != null)
+			if (mainView != null) {
 				mainView.RemoveFromSuperview ();
+				isOpen = IsOpen;
+			}
 			CurrentViewController = ViewControllers [SelectedIndex];
 			var frame = View.Bounds;
-			if (IsOpen || ShouldStayOpen)
+			if (isOpen || ShouldStayOpen)
 				frame.X = menuWidth;
 			
 			setViewSize ();
