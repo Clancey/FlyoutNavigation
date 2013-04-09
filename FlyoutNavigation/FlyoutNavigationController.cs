@@ -26,6 +26,7 @@ using MonoTouch.CoreGraphics;
 
 namespace FlyoutNavigation
 {
+    [Register("FlyoutNavigationController")]
 	public class FlyoutNavigationController : UIViewController
 	{
 		UIColor tintColor;
@@ -64,36 +65,46 @@ namespace FlyoutNavigation
 			}
 		}
 
+        public FlyoutNavigationController (IntPtr handle) : base(handle)
+        {
+            Initialize();
+        }
+
 		public FlyoutNavigationController (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
-			navigation = new DialogViewController(navigationStyle,null);
-			navigation.OnSelection += NavigationItemSelected;
-			var navFrame = navigation.View.Frame;
-			navFrame.Width = menuWidth;
-			navigation.View.Frame = navFrame;
-			this.View.AddSubview (navigation.View);
-			SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
-				//Delegate = new SearchDelegate (this),
-				TintColor = this.TintColor
-			};
-			
-			TintColor = UIColor.Black;
-			//navigation.TableView.TableHeaderView = SearchBar;
-			navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)){BackgroundColor = UIColor.Clear};
-			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView ();
-			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-5, -1);
-			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
-			shadowView.Layer.ShadowOpacity = .75f;
-			closeButton = new UIButton ();
-			closeButton.TouchDown += delegate {
-				HideMenu ();
-			};
-			AlwaysShowLandscapeMenu = true;
-
-			this.View.AddGestureRecognizer (new OpenMenuGestureRecognizer (this, new Selector ("panned"), this));
+            Initialize(navigationStyle);
 		}
+
+        private void Initialize (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
+        {
+            navigation = new DialogViewController(navigationStyle,null);
+            navigation.OnSelection += NavigationItemSelected;
+            var navFrame = navigation.View.Frame;
+            navFrame.Width = menuWidth;
+            navigation.View.Frame = navFrame;
+            this.View.AddSubview (navigation.View);
+            SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
+                //Delegate = new SearchDelegate (this),
+                TintColor = this.TintColor
+            };
+            
+            TintColor = UIColor.Black;
+            //navigation.TableView.TableHeaderView = SearchBar;
+            navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)){BackgroundColor = UIColor.Clear};
+            navigation.TableView.ScrollsToTop = false;
+            shadowView = new UIView ();
+            shadowView.BackgroundColor = UIColor.White;
+            shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-5, -1);
+            shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+            shadowView.Layer.ShadowOpacity = .75f;
+            closeButton = new UIButton ();
+            closeButton.TouchDown += delegate {
+                HideMenu ();
+            };
+            AlwaysShowLandscapeMenu = true;
+            
+            this.View.AddGestureRecognizer (new OpenMenuGestureRecognizer (this, new Selector ("panned"), this));
+        }
 
 		public event UITouchEventArgs ShouldReceiveTouch;
 
