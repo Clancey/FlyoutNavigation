@@ -177,7 +177,7 @@ namespace FlyoutNavigation
 			get{ return navigation.TableView;}
 		}
 
-		UIViewController[] viewControllers;
+		protected UIViewController[] viewControllers;
 
 		public UIViewController[] ViewControllers {
 			get{ return viewControllers;}
@@ -189,14 +189,14 @@ namespace FlyoutNavigation
 			}
 		}
 		
-		private void NavigationItemSelected (NSIndexPath indexPath)
+		protected void NavigationItemSelected (NSIndexPath indexPath)
 		{
 			var index = GetIndex (indexPath);
 			NavigationItemSelected (index);
 			
 		}
 
-		private void NavigationItemSelected (int index)
+		protected void NavigationItemSelected (int index)
 		{
 			selectedIndex = index;			
 			if (viewControllers == null || viewControllers.Length <= index || index < 0) {
@@ -387,7 +387,7 @@ namespace FlyoutNavigation
 			return rowCount + indexPath.Row;
 		}
 
-		private NSIndexPath GetIndexPath (int index)
+		protected NSIndexPath GetIndexPath (int index)
 		{
 			if (navigation.Root == null)
 				return NSIndexPath.FromRowSection (0, 0);
@@ -444,7 +444,7 @@ namespace FlyoutNavigation
 			base.WillAnimateRotation (toInterfaceOrientation, duration);
 		}
 
-		private void EnsureInvokedOnMainThread (Action action)
+		protected void EnsureInvokedOnMainThread (Action action)
 		{
 			if (IsMainThread ()) {
 				action ();
