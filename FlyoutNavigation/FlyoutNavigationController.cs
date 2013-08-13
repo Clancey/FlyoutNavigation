@@ -98,8 +98,8 @@ namespace FlyoutNavigation
             shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
             shadowView.Layer.ShadowOpacity = .75f;
             closeButton = new UIButton ();
-            closeButton.TouchDown += delegate {
-                HideMenu ();
+            closeButton.TouchUpInside += delegate {
+				HideMenu ();
             };
             AlwaysShowLandscapeMenu = true;
             
@@ -143,14 +143,14 @@ namespace FlyoutNavigation
 				frame.X = translation + startX;
 				if (frame.X < 0)
 					frame.X = 0;
-				else if (frame.X > menuWidth)
+				else if (frame.X > frame.Width)
 					frame.X = menuWidth;
 				SetLocation(frame);
 			} else if (panGesture.State == UIGestureRecognizerState.Ended) {
 				var velocity = panGesture.VelocityInView(View).X;
 				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
 					? (velocity > 0)
-						: (translation > (menuWidth / 2));
+						: (translation + startX > (menuWidth / 2));
 				if(show)
 					ShowMenu();
 				else 
@@ -167,6 +167,7 @@ namespace FlyoutNavigation
 			navFrame.Width = menuWidth;
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
+			this.View.BackgroundColor = NavigationTableView.BackgroundColor;
 			base.ViewWillAppear (animated);
 		}
 		
