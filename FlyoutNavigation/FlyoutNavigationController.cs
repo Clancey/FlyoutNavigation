@@ -72,22 +72,23 @@ namespace FlyoutNavigation
 			navFrame.Width = menuWidth;
 			navigation.View.Frame = navFrame;
 			this.View.AddSubview (navigation.View);
+			this.AddChildViewController (navigation);
 			SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
 				//Delegate = new SearchDelegate (this),
 				TintColor = this.TintColor
 			};
-			
+
 			TintColor = UIColor.Black;
 			//navigation.TableView.TableHeaderView = SearchBar;
 			navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)){BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView ();
 			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-5, -1);
-			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
-			shadowView.Layer.ShadowOpacity = .75f;
+			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-1, 0);
+			shadowView.Layer.ShadowColor = UIColor.DarkGray.CGColor;
+			shadowView.Layer.ShadowOpacity = .5f;
 			closeButton = new UIButton ();
-			closeButton.TouchDown += delegate {
+			closeButton.TouchUpInside += delegate {
 				HideMenu ();
 			};
 			AlwaysShowLandscapeMenu = true;
@@ -106,40 +107,35 @@ namespace FlyoutNavigation
 
 		public override void ViewDidLayoutSubviews ()
 		{
-			base.ViewDidLayoutSubviews ();
-			var navFrame = navigation.View.Frame;
+			base.ViewDidLayoutSubviews ();		
+			var navFrame =  this.View.Bounds;
+//			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
+//			navFrame.Height -= navFrame.Y;
+			//this.statusbar
 			navFrame.Width = menuWidth;
 			if (navigation.View.Frame != navFrame)
 				navigation.View.Frame = navFrame;
 		}
 
+		float startX = 0;
 		[Export("panned")]
 		public void DragContentView (UIPanGestureRecognizer panGesture)
 		{
-			if (ShouldStayOpen)
+			if (ShouldStayOpen || mainView == null)
 				return;
+			var frame = mainView.Frame;
 			var translation = panGesture.TranslationInView (View).X;
-			var frame = mainView.Bounds;
-			if (panGesture.State == UIGestureRecognizerState.Changed) {
-				if (IsOpen) {
-					if (translation > 0.0f) {
-						ShowMenu();
-					} else if (translation < - menuWidth) {
-						HideMenu();
-					} else {
-						frame.X = menuWidth + translation;
-						SetLocation(frame); 
-					}
-				} else {
-					if (translation < 0.0f) {
-						HideMenu();
-					} else if (translation > menuWidth) {
-						ShowMenu();
-					} else {
-						frame.X = translation;
-						SetLocation(frame);
-					}
-				}
+			//Console.WriteLine (translation);
+			
+			if (panGesture.State == UIGestureRecognizerState.Began) {
+				startX = frame.X;
+			} else if (panGesture.State == UIGestureRecognizerState.Changed) {
+				frame.X = translation + startX;
+				if (frame.X < 0)
+					frame.X = 0;
+				else if (frame.X > menuWidth)
+					frame.X = menuWidth;
+				SetLocation(frame);
 			} else if (panGesture.State == UIGestureRecognizerState.Ended) {
 				var velocity = panGesture.VelocityInView(View).X;
 				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
@@ -252,7 +248,7 @@ namespace FlyoutNavigation
 //			if (isOpen)
 //				return;
 			EnsureInvokedOnMainThread (delegate {
-				navigation.ReloadData ();
+				//navigation.ReloadData ();
 				//isOpen = true;
 				closeButton.Frame = mainView.Frame;
 				shadowView.Frame = mainView.Frame;
@@ -343,6 +339,8 @@ namespace FlyoutNavigation
 
 		public void ResignFirstResponders (UIView view)
 		{
+			if (view.Subviews == null)
+				return;
 			foreach (var subview in view.Subviews) {
 				if (subview.IsFirstResponder)
 					subview.ResignFirstResponder ();
@@ -414,7 +412,17 @@ namespace FlyoutNavigation
 			var theReturn = CurrentViewController == null ? true : CurrentViewController.ShouldAutorotateToInterfaceOrientation (toInterfaceOrientation);
 			return theReturn;
 		}
-
+		public override UIInterfaceOrientationMask GetSupportedInterfaceOrientations ()
+		{
+			if(CurrentViewController != null)
+				return CurrentViewController.GetSupportedInterfaceOrientations();
+			return UIInterfaceOrientationMask.All;
+		}
+		public override bool ShouldAutomaticallyForwardRotationMethods {
+			get {
+				return true;
+			}
+		}
 		public override void WillRotate (UIInterfaceOrientation toInterfaceOrientation, double duration)
 		{
 			base.WillRotate (toInterfaceOrientation, duration);
