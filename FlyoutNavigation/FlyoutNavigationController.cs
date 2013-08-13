@@ -148,9 +148,12 @@ namespace FlyoutNavigation
 				SetLocation(frame);
 			} else if (panGesture.State == UIGestureRecognizerState.Ended) {
 				var velocity = panGesture.VelocityInView(View).X;
+				//Console.WriteLine (velocity);
+				var newX = translation + startX;
+				Console.WriteLine (translation + startX);
 				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
 					? (velocity > 0)
-						: (translation + startX > (menuWidth / 2));
+						: startX < menuWidth ? (newX > (menuWidth / 2)) : newX > menuWidth;
 				if(show)
 					ShowMenu();
 				else 
