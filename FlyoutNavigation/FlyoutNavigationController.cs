@@ -26,6 +26,7 @@ using MonoTouch.CoreGraphics;
 
 namespace FlyoutNavigation
 {
+    [Register("FlyoutNavigationController")]
 	public class FlyoutNavigationController : UIViewController
 	{
 		UIColor tintColor;
@@ -64,37 +65,46 @@ namespace FlyoutNavigation
 			}
 		}
 
+        public FlyoutNavigationController (IntPtr handle) : base(handle)
+        {
+            Initialize();
+        }
+
 		public FlyoutNavigationController (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
-			navigation = new DialogViewController(navigationStyle,null);
-			navigation.OnSelection += NavigationItemSelected;
-			var navFrame = navigation.View.Frame;
-			navFrame.Width = menuWidth;
-			navigation.View.Frame = navFrame;
-			this.View.AddSubview (navigation.View);
-			this.AddChildViewController (navigation);
-			SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
-				//Delegate = new SearchDelegate (this),
-				TintColor = this.TintColor
-			};
-
-			TintColor = UIColor.Black;
-			//navigation.TableView.TableHeaderView = SearchBar;
-			navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)){BackgroundColor = UIColor.Clear};
-			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView ();
-			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-1, 0);
-			shadowView.Layer.ShadowColor = UIColor.DarkGray.CGColor;
-			shadowView.Layer.ShadowOpacity = .5f;
-			closeButton = new UIButton ();
-			closeButton.TouchUpInside += delegate {
-				HideMenu ();
-			};
-			AlwaysShowLandscapeMenu = true;
-
-			this.View.AddGestureRecognizer (new OpenMenuGestureRecognizer (this, new Selector ("panned"), this));
+            Initialize(navigationStyle);
 		}
+
+        private void Initialize (UITableViewStyle navigationStyle = UITableViewStyle.Plain)
+        {
+            navigation = new DialogViewController(navigationStyle,null);
+            navigation.OnSelection += NavigationItemSelected;
+            var navFrame = navigation.View.Frame;
+            navFrame.Width = menuWidth;
+            navigation.View.Frame = navFrame;
+            this.View.AddSubview (navigation.View);
+            SearchBar = new UISearchBar (new RectangleF (0, 0, navigation.TableView.Bounds.Width, 44)) {
+                //Delegate = new SearchDelegate (this),
+                TintColor = this.TintColor
+            };
+            
+            TintColor = UIColor.Black;
+            //navigation.TableView.TableHeaderView = SearchBar;
+            navigation.TableView.TableFooterView = new UIView (new RectangleF (0, 0, 100, 100)){BackgroundColor = UIColor.Clear};
+            navigation.TableView.ScrollsToTop = false;
+            shadowView = new UIView ();
+            shadowView.BackgroundColor = UIColor.White;
+            shadowView.Layer.ShadowOffset = new System.Drawing.SizeF (-5, -1);
+            shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+            shadowView.Layer.ShadowOpacity = .75f;
+            closeButton = new UIButton ();
+            closeButton.TouchDown += delegate {
+                HideMenu ();
+            };
+            AlwaysShowLandscapeMenu = true;
+            
+            this.View.AddGestureRecognizer (new OpenMenuGestureRecognizer (this, new Selector ("panned"), this));
+        }
 
 		public event UITouchEventArgs ShouldReceiveTouch;
 
@@ -173,7 +183,7 @@ namespace FlyoutNavigation
 			get{ return navigation.TableView;}
 		}
 
-		UIViewController[] viewControllers;
+		protected UIViewController[] viewControllers;
 
 		public UIViewController[] ViewControllers {
 			get{ return viewControllers;}
@@ -185,14 +195,14 @@ namespace FlyoutNavigation
 			}
 		}
 		
-		private void NavigationItemSelected (NSIndexPath indexPath)
+		protected void NavigationItemSelected (NSIndexPath indexPath)
 		{
 			var index = GetIndex (indexPath);
 			NavigationItemSelected (index);
 			
 		}
 
-		private void NavigationItemSelected (int index)
+		protected void NavigationItemSelected (int index)
 		{
 			selectedIndex = index;			
 			if (viewControllers == null || viewControllers.Length <= index || index < 0) {
@@ -385,7 +395,7 @@ namespace FlyoutNavigation
 			return rowCount + indexPath.Row;
 		}
 
-		private NSIndexPath GetIndexPath (int index)
+		protected NSIndexPath GetIndexPath (int index)
 		{
 			if (navigation.Root == null)
 				return NSIndexPath.FromRowSection (0, 0);
@@ -452,7 +462,7 @@ namespace FlyoutNavigation
 			base.WillAnimateRotation (toInterfaceOrientation, duration);
 		}
 
-		private void EnsureInvokedOnMainThread (Action action)
+		protected void EnsureInvokedOnMainThread (Action action)
 		{
 			if (IsMainThread ()) {
 				action ();
