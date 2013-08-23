@@ -244,6 +244,10 @@ namespace FlyoutNavigation
 			this.AddChildViewController (CurrentViewController);
 			if (!HideShadow)
 				this.View.InsertSubviewBelow (shadowView, mainView);
+			else
+			{
+				shadowView.RemoveFromSuperview();
+			}
 			if (!ShouldStayOpen)
 				HideMenu ();
 			if (SelectedIndexChanged != null)
