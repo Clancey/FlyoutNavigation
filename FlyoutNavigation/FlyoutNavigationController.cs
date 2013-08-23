@@ -55,7 +55,13 @@ namespace FlyoutNavigation
 
 		public bool HideShadow{ get; set; }
 
-		public UIViewController CurrentViewController{ get; private set; }
+		public UIColor ShadowViewColor
+		{
+			get { return shadowView.BackgroundColor; }
+			set { shadowView.BackgroundColor = value; }
+		}
+
+	    public UIViewController CurrentViewController{ get; private set; }
 
 		UIView mainView {
 			get {
@@ -376,7 +382,7 @@ namespace FlyoutNavigation
 
 		private int selectedIndex;
 
-		public int SelectedIndex {
+	    public int SelectedIndex {
 			get{ return selectedIndex;}
 			set {
 				if (selectedIndex == value)
