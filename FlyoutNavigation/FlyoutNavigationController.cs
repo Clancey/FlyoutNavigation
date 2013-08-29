@@ -35,6 +35,7 @@ namespace FlyoutNavigation
 		float startX;
 		UIColor tintColor;
 		protected UIViewController[] viewControllers;
+		bool hideShadow;
 
 		public FlyoutNavigationController(IntPtr handle) : base(handle)
 		{
@@ -63,7 +64,25 @@ namespace FlyoutNavigation
 
 		public bool ForceMenuOpen { get; set; }
 
-		public bool HideShadow { get; set; }
+		public bool HideShadow
+		{
+			get { return hideShadow; }
+			set
+			{
+				if (value == hideShadow)
+					return;
+				hideShadow = value;
+				if (hideShadow)
+				{
+					if(mainView != null)
+						View.InsertSubviewBelow(shadowView, mainView);
+				}
+			
+			else
+				shadowView.RemoveFromSuperview();
+
+			}
+		}
 
 		public UIColor ShadowViewColor
 		{
