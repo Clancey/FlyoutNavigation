@@ -185,7 +185,12 @@ namespace FlyoutNavigation
 				};
 
 			TintColor = UIColor.Black;
-			//navigation.TableView.TableHeaderView = SearchBar;
+			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
+			if(version.Major >= 7)
+			navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
+					{
+						BackgroundColor = UIColor.Clear
+					};
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView();
