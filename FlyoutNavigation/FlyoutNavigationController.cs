@@ -25,8 +25,8 @@ namespace FlyoutNavigation
 	public class FlyoutNavigationController : UIViewController
 	{
 		const float sidebarFlickVelocity = 1000.0f;
-		public const int menuWidth = 250;
-		public UISearchBar SearchBar;
+		public const int menuWidth = 280;
+		//public UISearchBar SearchBar;
 		UIButton closeButton;
 		bool firstLaunch = true;
 		DialogViewController navigation;
@@ -54,7 +54,7 @@ namespace FlyoutNavigation
 			{
 				if (tintColor == value)
 					return;
-				SearchBar.TintColor = value;
+				//SearchBar.TintColor = value;
 			}
 		}
 
@@ -178,11 +178,11 @@ namespace FlyoutNavigation
 			navFrame.Width = menuWidth;
 			navigation.View.Frame = navFrame;
 			View.AddSubview(navigation.View);
-			SearchBar = new UISearchBar(new RectangleF(0, 0, navigation.TableView.Bounds.Width, 44))
-				{
-					//Delegate = new SearchDelegate (this),
-					TintColor = TintColor
-				};
+			//SearchBar = new UISearchBar(new RectangleF(0, 0, navigation.TableView.Bounds.Width, 44))
+			//	{
+			//		//Delegate = new SearchDelegate (this),
+			//		TintColor = TintColor
+			//	};
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
@@ -229,6 +229,7 @@ namespace FlyoutNavigation
 		[Export("panned")]
 		public void DragContentView(UIPanGestureRecognizer panGesture)
 		{
+			Console.WriteLine("drag flyout");
 			if (ShouldStayOpen || mainView == null)
 				return;
 			RectangleF frame = mainView.Frame;
