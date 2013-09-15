@@ -340,6 +340,9 @@ namespace FlyoutNavigation
 					//isOpen = true;
 					closeButton.Frame = mainView.Frame;
 					shadowView.Frame = mainView.Frame;
+					var statusFrame = statusImage.Frame;
+					statusFrame.X = mainView.Frame.X;
+					statusImage.Frame = statusFrame;
 //				if (!HideShadow)
 //					this.View.InsertSubviewBelow (shadowView, mainView);
 					if (!ShouldStayOpen)
@@ -357,7 +360,6 @@ namespace FlyoutNavigation
 					closeButton.Frame = frame;
 
 
-					var statusFrame = statusImage.Frame;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
 
@@ -435,8 +437,11 @@ namespace FlyoutNavigation
 					navigation.FinishSearch();
 					closeButton.RemoveFromSuperview();
 					shadowView.Frame = mainView.Frame;
+					var statusFrame = statusImage.Frame;
+					statusFrame.X = mainView.Frame.X;
+					statusImage.Frame = statusFrame;
 					//UIView.AnimationWillEnd += hideComplete;
-					UIView.Animate(.5f,	() =>
+					UIView.Animate(.2,	() =>
 						{
 							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
 							RectangleF frame = View.Bounds;
@@ -444,8 +449,6 @@ namespace FlyoutNavigation
 							setViewSize();
 							SetLocation(frame);
 							shadowView.Frame = frame;
-
-							var statusFrame = statusImage.Frame;
 							statusFrame.X = 0;
 							statusImage.Frame = statusFrame;
 						}, hideComplete);
