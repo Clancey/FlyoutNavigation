@@ -302,7 +302,7 @@ namespace FlyoutNavigation
 					SelectedIndexChanged();
 				return;
 			}
-
+			UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
 			bool isOpen = false;
 
 			if (mainView != null)
@@ -322,6 +322,8 @@ namespace FlyoutNavigation
 			AddChildViewController(CurrentViewController);
 			if (!HideShadow)
 				View.InsertSubviewBelow(shadowView, mainView);
+
+
 			if (!ShouldStayOpen)
 				HideMenu();
 			if (SelectedIndexChanged != null)
