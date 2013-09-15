@@ -14,6 +14,7 @@
 
 using System;
 using System.Drawing;
+using MonoTouch.CoreGraphics;
 using MonoTouch.Dialog;
 using MonoTouch.Foundation;
 using MonoTouch.ObjCRuntime;
@@ -34,6 +35,8 @@ namespace FlyoutNavigation
 		UIView shadowView;
 		float startX;
 		UIColor tintColor;
+
+		UIImageView statusImage;
 		protected UIViewController[] viewControllers;
 		bool hideShadow;
 
@@ -170,8 +173,10 @@ namespace FlyoutNavigation
 			get { return true; }
 		}
 
+		bool isIos7 = false;
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
+			statusImage = new UIImageView();
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
@@ -186,7 +191,8 @@ namespace FlyoutNavigation
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
-			if(version.Major >= 7)
+			isIos7 = version.Major >= 7;
+			if(isIos7)
 			navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
 					{
 						BackgroundColor = UIColor.Clear
@@ -349,6 +355,12 @@ namespace FlyoutNavigation
 					frame = mainView.Frame;
 					shadowView.Frame = frame;
 					closeButton.Frame = frame;
+
+
+					var statusFrame = statusImage.Frame;
+					statusFrame.X = mainView.Frame.X;
+					statusImage.Frame = statusFrame;
+
 					UIView.CommitAnimations();
 				});
 		}
@@ -375,6 +387,42 @@ namespace FlyoutNavigation
 									frame.Top + frame.Height/2);
 			mainView.Center = center;
 			shadowView.Center = center;
+
+			if (Math.Abs(frame.X - 0) > float.Epsilon)
+			{
+				getStatus();
+				var statusFrame = statusImage.Frame;
+				statusFrame.X = mainView.Frame.X;
+				statusImage.Frame = statusFrame;
+			}
+		}
+
+		void getStatus()
+		{
+			if (!isIos7 || statusImage.Superview != null)
+				return;
+			this.View.AddSubview(statusImage);
+			statusImage.Image = captureStatusBarImage();
+			statusImage.Frame = UIApplication.SharedApplication.StatusBarFrame;
+			UIApplication.SharedApplication.StatusBarHidden = true;
+
+		}
+		UIImage captureStatusBarImage()
+		{
+			var frame = UIApplication.SharedApplication.StatusBarFrame;
+			frame.Width *= 2;
+			frame.Height *= 2;
+			var image = CGImage.ScreenImage;
+			image = image.WithImageInRect(frame);
+			var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
+			return newImage;
+		}
+		void hideStatus()
+		{
+			if (!isIos7)
+				return;
+			statusImage.RemoveFromSuperview();
+			UIApplication.SharedApplication.StatusBarHidden = false;
 		}
 
 		public void HideMenu()
@@ -388,22 +436,26 @@ namespace FlyoutNavigation
 					closeButton.RemoveFromSuperview();
 					shadowView.Frame = mainView.Frame;
 					//UIView.AnimationWillEnd += hideComplete;
-					UIView.BeginAnimations("slideMenu");
-					UIView.SetAnimationDidStopSelector(new Selector("animationEnded"));
-					//UIView.SetAnimationDuration(.5);
-					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-					RectangleF frame = View.Bounds;
-					frame.X = 0;
-					setViewSize();
-					SetLocation(frame);
-					shadowView.Frame = frame;
-					UIView.CommitAnimations();
+					UIView.Animate(.5f,	() =>
+						{
+							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
+							RectangleF frame = View.Bounds;
+							frame.X = 0;
+							setViewSize();
+							SetLocation(frame);
+							shadowView.Frame = frame;
+
+							var statusFrame = statusImage.Frame;
+							statusFrame.X = 0;
+							statusImage.Frame = statusFrame;
+						}, hideComplete);
 				});
 		}
 
 		[Export("animationEnded")]
 		void hideComplete()
 		{
+			hideStatus();
 			shadowView.RemoveFromSuperview();
 		}
 
