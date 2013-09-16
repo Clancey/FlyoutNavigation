@@ -235,7 +235,7 @@ namespace FlyoutNavigation
 		[Export("panned")]
 		public void DragContentView(UIPanGestureRecognizer panGesture)
 		{
-			Console.WriteLine("drag flyout");
+			//Console.WriteLine("drag flyout");
 			if (ShouldStayOpen || mainView == null)
 				return;
 			RectangleF frame = mainView.Frame;
@@ -400,10 +400,10 @@ namespace FlyoutNavigation
 				statusImage.Frame = statusFrame;
 			}
 		}
-
+		public bool DisableStatusBarMoving {get;set;}
 		void getStatus()
 		{
-			if (!isIos7 || statusImage.Superview != null)
+			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null)
 				return;
 			this.View.AddSubview(statusImage);
 			statusImage.Image = captureStatusBarImage();
