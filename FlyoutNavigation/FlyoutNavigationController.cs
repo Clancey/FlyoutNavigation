@@ -176,6 +176,7 @@ namespace FlyoutNavigation
 		bool isIos7 = false;
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
+			DisableStatusBarMoving = true;
 			statusImage = new UIImageView();
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
@@ -302,7 +303,8 @@ namespace FlyoutNavigation
 					SelectedIndexChanged();
 				return;
 			}
-			UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
+			if(!DisableStatusBarMoving)
+				UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
 			bool isOpen = false;
 
 			if (mainView != null)
