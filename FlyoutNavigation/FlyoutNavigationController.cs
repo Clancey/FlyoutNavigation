@@ -209,7 +209,7 @@ namespace FlyoutNavigation
 			closeButton.TouchUpInside += delegate { HideMenu(); };
 			AlwaysShowLandscapeMenu = true;
 
-			View.AddGestureRecognizer(new OpenMenuGestureRecognizer(this, new Selector("panned"), this));
+			View.AddGestureRecognizer (new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 		}
 
 		public event UITouchEventArgs ShouldReceiveTouch;
@@ -233,7 +233,6 @@ namespace FlyoutNavigation
 				navigation.View.Frame = navFrame;
 		}
 
-		[Export("panned")]
 		public void DragContentView(UIPanGestureRecognizer panGesture)
 		{
 			//Console.WriteLine("drag flyout");

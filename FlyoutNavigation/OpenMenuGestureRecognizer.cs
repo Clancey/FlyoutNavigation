@@ -22,16 +22,14 @@ namespace FlyoutNavigation
 {
 	public class OpenMenuGestureRecognizer : UIPanGestureRecognizer
 	{
-		FlyoutNavigationController Parent;
-		public OpenMenuGestureRecognizer (NSObject target, Selector action,FlyoutNavigationController parent) : base(target,action)
+		public OpenMenuGestureRecognizer (Action<UIPanGestureRecognizer> callback, Func<UIGestureRecognizer, UITouch,bool>  shouldReceiveTouch) : base (callback)
 		{
-			Parent = parent;
 			this.ShouldReceiveTouch += (sender,touch)=> {
 				//Ugly hack to ignore touches that are on a cell that is moving...
 				bool isMovingCell = touch.View.ToString().IndexOf("UITableViewCellReorderControl",StringComparison.InvariantCultureIgnoreCase) > -1;
 				if(touch.View is UISlider || touch.View is MPVolumeView || isMovingCell)
 					return false;
-				return Parent.shouldReceiveTouch(sender,touch);
+				return shouldReceiveTouch(sender,touch);
 			};
 		}
 	}
