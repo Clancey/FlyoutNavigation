@@ -406,14 +406,18 @@ namespace FlyoutNavigation
 		{
 			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null)
 				return;
+			var image = captureStatusBarImage ();
+			if (image == null)
+				return;
 			this.View.AddSubview(statusImage);
-			statusImage.Image = captureStatusBarImage();
+			statusImage.Image = image;
 			statusImage.Frame = UIApplication.SharedApplication.StatusBarFrame;
 			UIApplication.SharedApplication.StatusBarHidden = true;
 
 		}
 		UIImage captureStatusBarImage()
 		{
+			try{
 			var frame = UIApplication.SharedApplication.StatusBarFrame;
 			frame.Width *= 2;
 			frame.Height *= 2;
@@ -421,6 +425,10 @@ namespace FlyoutNavigation
 			image = image.WithImageInRect(frame);
 			var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
 			return newImage;
+			}
+			catch(Exception ex) {
+				return null;
+			}
 		}
 		void hideStatus()
 		{
