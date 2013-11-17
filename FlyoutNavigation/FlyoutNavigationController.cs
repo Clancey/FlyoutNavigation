@@ -418,13 +418,13 @@ namespace FlyoutNavigation
 		UIImage captureStatusBarImage()
 		{
 			try{
-			var frame = UIApplication.SharedApplication.StatusBarFrame;
-			frame.Width *= 2;
-			frame.Height *= 2;
-			var image = CGImage.ScreenImage;
-			image = image.WithImageInRect(frame);
-			var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
-			return newImage;
+				var frame = UIApplication.SharedApplication.StatusBarFrame;
+				frame.Width *= UIScreen.MainScreen.Scale;
+				frame.Height *= UIScreen.MainScreen.Scale;
+				var image = CGImage.ScreenImage;
+				image = image.WithImageInRect(frame);
+				var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
+				return newImage;
 			}
 			catch(Exception ex) {
 				return null;
