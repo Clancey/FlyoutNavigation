@@ -36,7 +36,7 @@ namespace FlyoutNavigation
 		float startX;
 		UIColor tintColor;
 
-		UIImageView statusImage;
+		UIView statusImage;
 		protected UIViewController[] viewControllers;
 		bool hideShadow;
 
@@ -177,7 +177,7 @@ namespace FlyoutNavigation
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
-			statusImage = new UIImageView();
+			statusImage = new UIView{ClipsToBounds = true};
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
@@ -410,21 +410,18 @@ namespace FlyoutNavigation
 			if (image == null)
 				return;
 			this.View.AddSubview(statusImage);
-			statusImage.Image = image;
+			foreach (var view in statusImage.Subviews)
+				view.RemoveFromSuperview ();
+			statusImage.AddSubview (image);
 			statusImage.Frame = UIApplication.SharedApplication.StatusBarFrame;
 			UIApplication.SharedApplication.StatusBarHidden = true;
 
 		}
-		UIImage captureStatusBarImage()
+		UIView captureStatusBarImage()
 		{
 			try{
-				var frame = UIApplication.SharedApplication.StatusBarFrame;
-				frame.Width *= UIScreen.MainScreen.Scale;
-				frame.Height *= UIScreen.MainScreen.Scale;
-				var image = CGImage.ScreenImage;
-				image = image.WithImageInRect(frame);
-				var newImage = new UIImage(image).Scale(UIApplication.SharedApplication.StatusBarFrame.Size, 2f);
-				return newImage;
+				UIView screenShot = UIScreen.MainScreen.SnapshotView(false);
+				return screenShot;
 			}
 			catch(Exception ex) {
 				return null;
