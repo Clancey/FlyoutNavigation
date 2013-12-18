@@ -235,13 +235,12 @@ namespace FlyoutNavigation
 
 		public void DragContentView(UIPanGestureRecognizer panGesture)
 		{
-			//Console.WriteLine("drag flyout");
 			if (ShouldStayOpen || mainView == null)
 				return;
+			if (!HideShadow)
+				View.InsertSubviewBelow(shadowView, mainView);
 			RectangleF frame = mainView.Frame;
 			float translation = panGesture.TranslationInView(View).X;
-			//Console.WriteLine (translation);
-
 			if (panGesture.State == UIGestureRecognizerState.Began)
 			{
 				startX = frame.X;
@@ -258,9 +257,7 @@ namespace FlyoutNavigation
 			else if (panGesture.State == UIGestureRecognizerState.Ended)
 			{
 				float velocity = panGesture.VelocityInView(View).X;
-				//Console.WriteLine (velocity);
 				float newX = translation + startX;
-				Console.WriteLine(translation + startX);
 				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
 								? (velocity > 0)
 								: startX < menuWidth ? (newX > (menuWidth/2)) : newX > menuWidth;
@@ -346,8 +343,8 @@ namespace FlyoutNavigation
 					var statusFrame = statusImage.Frame;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
-//				if (!HideShadow)
-//					this.View.InsertSubviewBelow (shadowView, mainView);
+					if (!HideShadow)
+						this.View.InsertSubviewBelow (shadowView, mainView);
 					if (!ShouldStayOpen)
 						View.AddSubview(closeButton);
 					UIView.BeginAnimations("slideMenu");
