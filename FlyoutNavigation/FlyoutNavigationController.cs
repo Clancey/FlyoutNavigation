@@ -22,6 +22,11 @@ using MonoTouch.UIKit;
 
 namespace FlyoutNavigation
 {
+	public enum FlyOutNavigationPosition {
+		Left = 0, // default
+		Right
+	};
+
 	[Register("FlyoutNavigationController")]
 	public class FlyoutNavigationController : UIViewController
 	{
@@ -30,12 +35,12 @@ namespace FlyoutNavigation
 		//public UISearchBar SearchBar;
 		UIButton closeButton;
 		bool firstLaunch = true;
+		FlyOutNavigationPosition position;
 		DialogViewController navigation;
 		int selectedIndex;
 		UIView shadowView;
 		float startX;
 		UIColor tintColor;
-
 		UIView statusImage;
 		protected UIViewController[] viewControllers;
 		bool hideShadow;
@@ -61,6 +66,16 @@ namespace FlyoutNavigation
 			}
 		}
 
+		public FlyOutNavigationPosition Position {
+			get {
+				return position;
+			}
+			set {
+				position = value;
+				shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
+			}
+		}
+
 		public Action SelectedIndexChanged { get; set; }
 
 		public bool AlwaysShowLandscapeMenu { get; set; }
@@ -75,14 +90,12 @@ namespace FlyoutNavigation
 				if (value == hideShadow)
 					return;
 				hideShadow = value;
-				if (hideShadow)
-				{
-					if(mainView != null)
-						View.InsertSubviewBelow(shadowView, mainView);
+				if (hideShadow) {
+					if (mainView != null)
+						View.InsertSubviewBelow (shadowView, mainView);
+				} else {
+					shadowView.RemoveFromSuperview ();
 				}
-			
-			else
-				shadowView.RemoveFromSuperview();
 
 			}
 		}
@@ -131,7 +144,13 @@ namespace FlyoutNavigation
 
 		public bool IsOpen
 		{
-			get { return mainView.Frame.X == menuWidth; }
+			get {
+				if (Position == FlyOutNavigationPosition.Left) {
+					return mainView.Frame.X == menuWidth;
+				} else {
+					return mainView.Frame.X == -menuWidth;
+				}
+			}
 			set
 			{
 				if (value)
@@ -182,6 +201,8 @@ namespace FlyoutNavigation
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
+			if (Position == FlyOutNavigationPosition.Right)
+				navFrame.X = mainView.Frame.Width - menuWidth;
 			navigation.View.Frame = navFrame;
 			View.AddSubview(navigation.View);
 			//SearchBar = new UISearchBar(new RectangleF(0, 0, navigation.TableView.Bounds.Width, 44))
@@ -202,7 +223,7 @@ namespace FlyoutNavigation
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView();
 			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new SizeF(-5, -1);
+			shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
 			closeButton = new UIButton();
@@ -229,6 +250,8 @@ namespace FlyoutNavigation
 //			navFrame.Height -= navFrame.Y;
 			//this.statusbar
 			navFrame.Width = menuWidth;
+			if (Position == FlyOutNavigationPosition.Right)
+				navFrame.X = mainView.Frame.Width - menuWidth;
 			if (navigation.View.Frame != navFrame)
 				navigation.View.Frame = navFrame;
 		}
@@ -239,6 +262,7 @@ namespace FlyoutNavigation
 				return;
 			if (!HideShadow)
 				View.InsertSubviewBelow(shadowView, mainView);
+			navigation.View.Hidden = false;
 			RectangleF frame = mainView.Frame;
 			float translation = panGesture.TranslationInView(View).X;
 			if (panGesture.State == UIGestureRecognizerState.Began)
@@ -248,23 +272,35 @@ namespace FlyoutNavigation
 			else if (panGesture.State == UIGestureRecognizerState.Changed)
 			{
 				frame.X = translation + startX;
-				if (frame.X < 0)
-					frame.X = 0;
-				else if (frame.X > frame.Width)
-					frame.X = menuWidth;
+				if (Position == FlyOutNavigationPosition.Left)
+				{
+					if (frame.X < 0)
+						frame.X = 0;
+					else if (frame.X > menuWidth)
+						frame.X = menuWidth;
+				}
+				else
+				{
+					if (frame.X > 0)
+						frame.X = 0;
+					else if (frame.X < -menuWidth)
+						frame.X = -menuWidth;
+				}
 				SetLocation(frame);
 			}
 			else if (panGesture.State == UIGestureRecognizerState.Ended)
 			{
 				float velocity = panGesture.VelocityInView(View).X;
 				float newX = translation + startX;
-				bool show = (Math.Abs(velocity) > sidebarFlickVelocity)
-								? (velocity > 0)
-								: startX < menuWidth ? (newX > (menuWidth/2)) : newX > menuWidth;
-				if (show)
-					ShowMenu();
-				else
-					HideMenu();
+				bool show = Math.Abs (velocity) > sidebarFlickVelocity ? velocity > 0 : newX > (menuWidth / 2);
+				if (Position == FlyOutNavigationPosition.Right) {
+					show = Math.Abs(velocity) > sidebarFlickVelocity ? velocity < 0 : newX < -(menuWidth / 2);
+				}
+				if (show) {
+					ShowMenu ();
+				} else {
+					HideMenu ();
+				}
 			}
 		}
 
@@ -272,6 +308,8 @@ namespace FlyoutNavigation
 		{
 			RectangleF navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
+			if (Position == FlyOutNavigationPosition.Right)
+				navFrame.X = mainView.Frame.Width - menuWidth;
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
@@ -301,8 +339,8 @@ namespace FlyoutNavigation
 			}
 			if(!DisableStatusBarMoving)
 				UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
-			bool isOpen = false;
 
+			bool isOpen = false;
 			if (mainView != null)
 			{
 				mainView.RemoveFromSuperview();
@@ -311,17 +349,12 @@ namespace FlyoutNavigation
 			CurrentViewController = ViewControllers[SelectedIndex];
 			RectangleF frame = View.Bounds;
 			if (isOpen || ShouldStayOpen)
-				frame.X = menuWidth;
+				frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
 
 			setViewSize();
 			SetLocation(frame);
-
 			View.AddSubview(mainView);
 			AddChildViewController(CurrentViewController);
-			if (!HideShadow)
-				View.InsertSubviewBelow(shadowView, mainView);
-
-
 			if (!ShouldStayOpen)
 				HideMenu();
 			if (SelectedIndexChanged != null)
@@ -338,31 +371,29 @@ namespace FlyoutNavigation
 				{
 					//navigation.ReloadData ();
 					//isOpen = true;
+					navigation.View.Hidden = false;
 					closeButton.Frame = mainView.Frame;
 					shadowView.Frame = mainView.Frame;
 					var statusFrame = statusImage.Frame;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
-					if (!HideShadow)
-						this.View.InsertSubviewBelow (shadowView, mainView);
 					if (!ShouldStayOpen)
 						View.AddSubview(closeButton);
+					if (!HideShadow)
+						View.InsertSubviewBelow (shadowView, mainView);
 					UIView.BeginAnimations("slideMenu");
 					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 					//UIView.SetAnimationDuration(2);
 					setViewSize();
 					RectangleF frame = mainView.Frame;
-					frame.X = menuWidth;
+					frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
 					SetLocation(frame);
 					setViewSize();
 					frame = mainView.Frame;
 					shadowView.Frame = frame;
 					closeButton.Frame = frame;
-
-
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
-
 					UIView.CommitAnimations();
 				});
 		}
@@ -434,8 +465,9 @@ namespace FlyoutNavigation
 
 		public void HideMenu()
 		{
-//			if (!IsOpen)
-//				return;
+			if (mainView.Frame.X == 0)
+				return;
+
 			EnsureInvokedOnMainThread(delegate
 				{
 					//isOpen = false;
@@ -465,6 +497,7 @@ namespace FlyoutNavigation
 		{
 			hideStatus();
 			shadowView.RemoveFromSuperview();
+			navigation.View.Hidden = true;
 		}
 
 		public void ResignFirstResponders(UIView view)
