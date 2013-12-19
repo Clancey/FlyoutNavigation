@@ -26,6 +26,8 @@ public override void ViewDidLoad ()
 			new UIViewController { View = new UILabel { Text = "Minerals (drag right)" } },
 		},
 	};
+	// Specify navigation position
+	navigation.Position = FlyOutNavigationPosition.Left;
 	// Show the navigation view
 	navigation.ToggleMenu ();
 	View.AddSubview (navigation.View);
