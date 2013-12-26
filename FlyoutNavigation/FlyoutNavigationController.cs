@@ -337,7 +337,7 @@ namespace FlyoutNavigation
 					SelectedIndexChanged();
 				return;
 			}
-			if(!DisableStatusBarMoving)
+			if(!DisableStatusBarMoving && !ShouldStayOpen)
 				UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
 
 			bool isOpen = false;
@@ -432,7 +432,7 @@ namespace FlyoutNavigation
 		public bool DisableStatusBarMoving {get;set;}
 		void getStatus()
 		{
-			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null)
+			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null || ShouldStayOpen)
 				return;
 			var image = captureStatusBarImage ();
 			if (image == null)
