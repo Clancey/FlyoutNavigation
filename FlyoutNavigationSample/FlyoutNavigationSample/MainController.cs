@@ -34,6 +34,7 @@ namespace Sample
 			navigation.Position = FlyOutNavigationPosition.Left;
 			navigation.View.Frame = UIScreen.MainScreen.Bounds;
 			View.AddSubview (navigation.View);
+			this.AddChildViewController (navigation);
 			
 			// Create the menu:
 			navigation.NavigationRoot = new RootElement ("Task List") {
