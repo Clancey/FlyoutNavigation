@@ -264,6 +264,7 @@ namespace FlyoutNavigation
 				View.InsertSubviewBelow(shadowView, mainView);
 			navigation.View.Hidden = false;
 			RectangleF frame = mainView.Frame;
+			shadowView.Frame = frame;
 			float translation = panGesture.TranslationInView(View).X;
 			if (panGesture.State == UIGestureRecognizerState.Began)
 			{
