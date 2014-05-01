@@ -165,9 +165,9 @@ namespace FlyoutNavigation
 			get
 			{
 				if (ForceMenuOpen || (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
-									AlwaysShowLandscapeMenu &&
-									(InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft
-									|| InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
+					AlwaysShowLandscapeMenu &&
+					(InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft
+						|| InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)))
 					return true;
 				return false;
 			}
@@ -196,7 +196,7 @@ namespace FlyoutNavigation
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
-			statusImage = new UIView{ClipsToBounds = true};
+			statusImage = new UIView{ClipsToBounds = true}.SetAccessibilityId( "statusbar");
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
@@ -215,10 +215,10 @@ namespace FlyoutNavigation
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
 			isIos7 = version.Major >= 7;
 			if(isIos7)
-			navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
-					{
-						BackgroundColor = UIColor.Clear
-					};
+				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
+			{
+				BackgroundColor = UIColor.Clear
+			};
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView();
@@ -246,8 +246,8 @@ namespace FlyoutNavigation
 		{
 			base.ViewDidLayoutSubviews();
 			RectangleF navFrame = View.Bounds;
-//			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
-//			navFrame.Height -= navFrame.Y;
+			//			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
+			//			navFrame.Height -= navFrame.Y;
 			//this.statusbar
 			navFrame.Width = menuWidth;
 			if (Position == FlyOutNavigationPosition.Right)
@@ -314,6 +314,9 @@ namespace FlyoutNavigation
 			navFrame.Location = PointF.Empty;
 			navigation.View.Frame = navFrame;
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
+			var frame = mainView.Frame;
+			setViewSize ();
+			SetLocation (frame);
 			base.ViewWillAppear(animated);
 		}
 
@@ -366,8 +369,8 @@ namespace FlyoutNavigation
 
 		public void ShowMenu()
 		{
-//			if (isOpen)
-//				return;
+			if (mainView == null)
+				return;
 			EnsureInvokedOnMainThread(delegate
 				{
 					//navigation.ReloadData ();
@@ -418,7 +421,7 @@ namespace FlyoutNavigation
 				return;
 			frame.Size = mainView.Frame.Size;
 			var center = new PointF(frame.Left + frame.Width/2,
-									frame.Top + frame.Height/2);
+				frame.Top + frame.Height/2);
 			mainView.Center = center;
 			shadowView.Center = center;
 
@@ -466,7 +469,7 @@ namespace FlyoutNavigation
 
 		public void HideMenu()
 		{
-			if (mainView.Frame.X == 0)
+			if (mainView == null || mainView.Frame.X == 0)
 				return;
 
 			EnsureInvokedOnMainThread(delegate
@@ -562,8 +565,8 @@ namespace FlyoutNavigation
 				return toInterfaceOrientation == InterfaceOrientation;
 
 			bool theReturn = CurrentViewController == null
-								? true
-								: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+				? true
+				: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
 			return theReturn;
 		}
 
@@ -587,15 +590,14 @@ namespace FlyoutNavigation
 				return;
 			switch (InterfaceOrientation)
 			{
-				case UIInterfaceOrientation.LandscapeLeft:
-				case UIInterfaceOrientation.LandscapeRight:
-					ShowMenu();
-					return;
-				default:
-					HideMenu();
-					return;
+			case UIInterfaceOrientation.LandscapeLeft:
+			case UIInterfaceOrientation.LandscapeRight:
+				ShowMenu ();
+				return;
+			default:
+				HideMenu ();
+				return;
 			}
-			setViewSize();
 		}
 
 		public override void WillAnimateRotation(UIInterfaceOrientation toInterfaceOrientation, double duration)
@@ -611,14 +613,25 @@ namespace FlyoutNavigation
 				return;
 			}
 			BeginInvokeOnMainThread(() =>
-									action()
-				);
+				action()
+			);
 		}
 
 		static bool IsMainThread()
 		{
 			return NSThread.Current.IsMainThread;
 			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
+		}
+	}
+
+	internal static class Helpers
+	{
+		static readonly IntPtr selAccessibilityIdentifier_Handle = Selector.GetHandle ("accessibilityIdentifier");
+		public static UIView SetAccessibilityId(this UIView view, string id)
+		{
+			var nsId = NSString.CreateNative (id);
+			Messaging.void_objc_msgSend_IntPtr (view.Handle, selAccessibilityIdentifier_Handle, nsId);
+			return view;
 		}
 	}
 }
