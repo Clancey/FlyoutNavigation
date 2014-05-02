@@ -378,7 +378,7 @@ namespace FlyoutNavigation
 					navigation.View.Hidden = false;
 					closeButton.Frame = mainView.Frame;
 					shadowView.Frame = mainView.Frame;
-					var statusFrame = statusImage.Frame;
+					var statusFrame = UIApplication.SharedApplication.StatusBarFrame;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
 					if (!ShouldStayOpen)
