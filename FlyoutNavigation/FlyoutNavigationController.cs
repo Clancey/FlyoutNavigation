@@ -626,11 +626,11 @@ namespace FlyoutNavigation
 
 	internal static class Helpers
 	{
-		static readonly IntPtr selAccessibilityIdentifier_Handle = Selector.GetHandle ("accessibilityIdentifier");
+		static readonly IntPtr setAccessibilityIdentifier_Handle = Selector.GetHandle ("setAccessibilityIdentifier:");
 		public static UIView SetAccessibilityId(this UIView view, string id)
 		{
 			var nsId = NSString.CreateNative (id);
-			Messaging.void_objc_msgSend_IntPtr (view.Handle, selAccessibilityIdentifier_Handle, nsId);
+			Messaging.void_objc_msgSend_IntPtr (view.Handle, setAccessibilityIdentifier_Handle, nsId);
 			return view;
 		}
 	}
