@@ -193,10 +193,17 @@ namespace FlyoutNavigation
 		}
 
 		bool isIos7 = false;
+		bool isIos8 = false;
+		class UAUIView : UIView
+		{
+			[Export ("accessibilityIdentifier")]
+			public string AccessibilityId {get;set;}
+		}
+
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
-			statusImage = new UIView{ClipsToBounds = true}.SetAccessibilityId( "statusbar");
+			statusImage = new UAUIView{ ClipsToBounds = true, AccessibilityId = "statusbar" };//.SetAccessibilityId( "statusbar");
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
 			RectangleF navFrame = navigation.View.Frame;
@@ -213,6 +220,7 @@ namespace FlyoutNavigation
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
+			isIos8 = version.Major >= 8;
 			isIos7 = version.Major >= 7;
 			if(isIos7)
 				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
@@ -221,12 +229,13 @@ namespace FlyoutNavigation
 			};
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView();
+			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true}.SetAccessibilityId("flyOutShadowLayer");
 			shadowView.BackgroundColor = UIColor.White;
 			shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
-			closeButton = new UIButton();
+			closeButton = new UIButton ();
+			closeButton.AccessibilityLabel = "Close Menu";
 			closeButton.TouchUpInside += delegate { HideMenu(); };
 			AlwaysShowLandscapeMenu = true;
 
@@ -433,7 +442,17 @@ namespace FlyoutNavigation
 				statusImage.Frame = statusFrame;
 			}
 		}
-		public bool DisableStatusBarMoving {get;set;}
+		bool disableStatusBarMoving;
+		public bool DisableStatusBarMoving {
+			get {
+				if (isIos8)
+					return true;
+				return disableStatusBarMoving;
+			}
+			set {
+				disableStatusBarMoving = value;
+			}
+		}
 		void getStatus()
 		{
 			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null || ShouldStayOpen)
@@ -469,7 +488,7 @@ namespace FlyoutNavigation
 
 		public void HideMenu()
 		{
-			if (mainView == null || mainView.Frame.X == 0)
+			if (mainView == null || mainView.Frame.X == 0 || ShouldStayOpen)
 				return;
 
 			EnsureInvokedOnMainThread(delegate
@@ -627,7 +646,7 @@ namespace FlyoutNavigation
 	internal static class Helpers
 	{
 		static readonly IntPtr setAccessibilityIdentifier_Handle = Selector.GetHandle ("setAccessibilityIdentifier:");
-		public static UIView SetAccessibilityId(this UIView view, string id)
+		public static T SetAccessibilityId<T>(this T view, string id) where T : NSObject
 		{
 			var nsId = NSString.CreateNative (id);
 			Messaging.void_objc_msgSend_IntPtr (view.Handle, setAccessibilityIdentifier_Handle, nsId);
