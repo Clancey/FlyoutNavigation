@@ -13,10 +13,10 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.ObjCRuntime;
-using MonoTouch.MediaPlayer;
-using MonoTouch.Foundation;
+using UIKit;
+using ObjCRuntime;
+using MediaPlayer;
+using Foundation;
 
 namespace FlyoutNavigation
 {
