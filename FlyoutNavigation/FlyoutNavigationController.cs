@@ -82,6 +82,10 @@ namespace FlyoutNavigation
 
 		public bool ForceMenuOpen { get; set; }
 
+		private bool AlreadyLayedOut = false;
+
+		public bool NavigationOpenedByLandscapeRotation { get; private set; }
+
 		public bool HideShadow
 		{
 			get { return hideShadow; }
@@ -229,6 +233,7 @@ namespace FlyoutNavigation
 			closeButton = new UIButton();
 			closeButton.TouchUpInside += delegate { HideMenu(); };
 			AlwaysShowLandscapeMenu = true;
+			NavigationOpenedByLandscapeRotation = false;
 
 			View.AddGestureRecognizer (new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 		}
@@ -254,6 +259,14 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			if (navigation.View.Frame != navFrame)
 				navigation.View.Frame = navFrame;
+
+			if (!AlreadyLayedOut)
+			{
+				AlreadyLayedOut = true;
+
+				if (AlwaysShowLandscapeMenu && (InterfaceOrientation == UIInterfaceOrientation.LandscapeRight || InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft))
+					NavigationOpenedByLandscapeRotation = true;
+			}
 		}
 
 		public void DragContentView(UIPanGestureRecognizer panGesture)
@@ -408,8 +421,19 @@ namespace FlyoutNavigation
 			//frame.Location = PointF.Empty;
 			if (ShouldStayOpen)
 				frame.Width -= menuWidth;
-			if (mainView.Bounds == frame)
-				return;
+
+            // mribbons@github - 28/08/2014 - Fix issue where mainview doesn't have full width sometimes after menu is opened in landscape, or app is started in landscape
+            if (InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)
+            {
+				frame.Width = UIScreen.MainScreen.Bounds.Height - (ShouldStayOpen ? menuWidth : 0);
+                frame.Height = UIScreen.MainScreen.Bounds.Width;
+            }
+            else
+            {
+				frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
+                frame.Height = UIScreen.MainScreen.Bounds.Height;
+            }
+
 			mainView.Bounds = frame;
 		}
 
@@ -523,7 +547,10 @@ namespace FlyoutNavigation
 					if (!IsOpen && CurrentViewController != null && CurrentViewController.IsViewLoaded)
 						ResignFirstResponders(CurrentViewController.View);
 					if (IsOpen)
+					{
 						HideMenu();
+						NavigationOpenedByLandscapeRotation = false;
+					}
 					else
 						ShowMenu();
 				});
@@ -586,17 +613,34 @@ namespace FlyoutNavigation
 		{
 			base.DidRotate(fromInterfaceOrientation);
 
+			// mribbons@github - 28/08/2014 - Fix menu width size chunk of shadowView missing when rotating to portait mode
+			shadowView.Frame = mainView.Frame;
+
 			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone)
 				return;
-			switch (InterfaceOrientation)
+
+			// mribbons@github - 28/08/2014 - Only do this is should stay open is false. 
+			// Note that this doesn't seem to work well anyway, menu shows and hides, or doesn't hide when switching to portrait (can't recall which but depends how AlwaysShowLandscapeMenu and ForceMenuOpen are set)
+			if (AlwaysShowLandscapeMenu)
 			{
-			case UIInterfaceOrientation.LandscapeLeft:
-			case UIInterfaceOrientation.LandscapeRight:
-				ShowMenu ();
-				return;
-			default:
-				HideMenu ();
-				return;
+				switch (InterfaceOrientation)
+				{
+					case UIInterfaceOrientation.LandscapeLeft:
+					case UIInterfaceOrientation.LandscapeRight:
+						if (!IsOpen)
+							NavigationOpenedByLandscapeRotation = true;
+
+						ShowMenu();
+						return;
+					default:
+						// mribbons@github - 28/08/2014 - Only close the menu if it was opened by rotating
+						if (NavigationOpenedByLandscapeRotation)
+						{
+							NavigationOpenedByLandscapeRotation = false;
+							HideMenu();
+						}
+						return;
+				}
 			}
 		}
 
