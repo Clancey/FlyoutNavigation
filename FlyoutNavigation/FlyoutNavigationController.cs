@@ -41,7 +41,6 @@ namespace FlyoutNavigation
 		{
 			get { return navigation; }
 		}
-
 		int selectedIndex;
 		UIView shadowView;
 		float startX;
@@ -224,10 +223,11 @@ namespace FlyoutNavigation
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
 			isIos7 = version.Major >= 7;
 			if(isIos7)
-				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
 			{
-				BackgroundColor = UIColor.Clear
-			};
+				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22));
+				navigation.TableView.BackgroundColor = UIColor.Clear;
+			}
+
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView();
