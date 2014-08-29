@@ -37,6 +37,11 @@ namespace FlyoutNavigation
 		bool firstLaunch = true;
 		FlyOutNavigationPosition position;
 		DialogViewController navigation;
+		public DialogViewController NavigationViewController
+		{
+			get { return navigation; }
+		}
+
 		int selectedIndex;
 		UIView shadowView;
 		float startX;
