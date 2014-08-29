@@ -41,6 +41,28 @@ namespace FlyoutNavigation
 		{
 			get { return navigation; }
 		}
+
+		protected UIView menuBorder;
+		protected UIColor menuBorderColor = UIColor.LightGray;
+		public UIColor MenuBorderColor
+		{
+			get { return menuBorderColor; }
+			set { menuBorderColor = value;
+				if (menuBorder != null)
+				{
+					menuBorder.BackgroundColor = menuBorderColor;
+					menuBorder.SetNeedsDisplay();
+				}
+			}
+		}
+
+		protected bool showMenuBorder = false;
+		public bool ShowMenuBorder
+		{
+			get { return showMenuBorder; }
+			set { showMenuBorder = value; }
+		}
+
 		int selectedIndex;
 		UIView shadowView;
 		float startX;
@@ -233,7 +255,7 @@ namespace FlyoutNavigation
 			shadowView = new UIView();
 			shadowView.BackgroundColor = UIColor.White;
 			shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
-			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+			shadowView.Layer.ShadowColor = UIColor.LightGray.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
 			closeButton = new UIButton();
 			closeButton.TouchUpInside += delegate { HideMenu(); };
@@ -271,6 +293,11 @@ namespace FlyoutNavigation
 
 				if (AlwaysShowLandscapeMenu && (InterfaceOrientation == UIInterfaceOrientation.LandscapeRight || InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft))
 					NavigationOpenedByLandscapeRotation = true;
+
+				if (showMenuBorder)
+				{
+					DisplayMenuBorder(mainView.Frame);
+				}
 			}
 		}
 
@@ -403,6 +430,12 @@ namespace FlyoutNavigation
 						View.AddSubview(closeButton);
 					if (!HideShadow)
 						View.InsertSubviewBelow (shadowView, mainView);
+					if (ShowMenuBorder)
+					{
+						//menuBorder.Frame = mainView.Frame;
+						//menuBorder.Frame.Width = 1f;
+						View.InsertSubviewBelow(menuBorder, mainView);
+					}
 					UIView.BeginAnimations("slideMenu");
 					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 					//UIView.SetAnimationDuration(2);
@@ -440,6 +473,8 @@ namespace FlyoutNavigation
             }
 
 			mainView.Bounds = frame;
+
+			DisplayMenuBorder(mainView.Frame);
 		}
 
 		void SetLocation(RectangleF frame)
@@ -454,12 +489,38 @@ namespace FlyoutNavigation
 			mainView.Center = center;
 			shadowView.Center = center;
 
+			DisplayMenuBorder(frame);
+
 			if (Math.Abs(frame.X - 0) > float.Epsilon)
 			{
 				getStatus();
 				var statusFrame = statusImage.Frame;
 				statusFrame.X = mainView.Frame.X;
 				statusImage.Frame = statusFrame;
+			}
+		}
+
+		private void DisplayMenuBorder(RectangleF frame)
+		{
+			if (ShowMenuBorder && menuBorder == null)
+			{
+				menuBorder = new UIView();
+				menuBorder.BackgroundColor = menuBorderColor;
+
+				View.InsertSubviewAbove(menuBorder, mainView);
+			}
+
+			if (ShowMenuBorder)
+			{
+				RectangleF borderFrame = new RectangleF();
+				// MDR 29/08/2014 - Prevent bottom part of border missing momentarily after rotate from landscape to portrait
+				
+				borderFrame.Height = UIScreen.MainScreen.Bounds.Height;
+				borderFrame.Width = 1f;
+				borderFrame.X = frame.X - 1f;
+				//borderFrame.X = navigation.View.Frame.Right + 1f;
+				borderFrame.Y = 0;
+				menuBorder.Frame = borderFrame;
 			}
 		}
 		public bool DisableStatusBarMoving {get;set;}
@@ -633,9 +694,10 @@ namespace FlyoutNavigation
 					case UIInterfaceOrientation.LandscapeLeft:
 					case UIInterfaceOrientation.LandscapeRight:
 						if (!IsOpen)
+						{
 							NavigationOpenedByLandscapeRotation = true;
-
-						ShowMenu();
+							ShowMenu();
+						}
 						return;
 					default:
 						// mribbons@github - 28/08/2014 - Only close the menu if it was opened by rotating
@@ -643,6 +705,10 @@ namespace FlyoutNavigation
 						{
 							NavigationOpenedByLandscapeRotation = false;
 							HideMenu();
+						}
+						else
+						{
+							DisplayMenuBorder(mainView.Frame);
 						}
 						return;
 				}
