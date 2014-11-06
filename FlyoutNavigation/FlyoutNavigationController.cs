@@ -13,12 +13,21 @@
 //    limitations under the License.
 
 using System;
+#if __UNIFIED__
 using CoreGraphics;
-using CoreGraphics;
-using MonoTouch.Dialog;
 using Foundation;
 using ObjCRuntime;
 using UIKit;
+#else
+using MonoTouch.CoreGraphics;
+using MonoTouch.Foundation;
+using MonoTouch.ObjCRuntime;
+using MonoTouch.UIKit;
+using CGRect=System.Drawing.RectangleF;
+using CGSize=System.Drawing.SizeF;
+using CGPoint=System.Drawing.PointF;
+#endif
+using MonoTouch.Dialog;
 
 namespace FlyoutNavigation
 {
@@ -39,7 +48,11 @@ namespace FlyoutNavigation
 		DialogViewController navigation;
 		int selectedIndex;
 		UIView shadowView;
+		#if __UNIFIED__
 		nfloat startX;
+		#else
+		float startX;
+		#endif
 		UIColor tintColor;
 		UIView statusImage;
 		protected UIViewController[] viewControllers;
