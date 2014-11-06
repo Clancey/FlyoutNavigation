@@ -2,8 +2,13 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
+#if __UNIFIED__
+using UIKit;
+using Foundation;
+#else
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
+#endif
 using MonoTouch.Dialog;
 
 using FlyoutNavigation;

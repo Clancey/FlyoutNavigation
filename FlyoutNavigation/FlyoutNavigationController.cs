@@ -13,12 +13,21 @@
 //    limitations under the License.
 
 using System;
-using System.Drawing;
+#if __UNIFIED__
+using CoreGraphics;
+using Foundation;
+using ObjCRuntime;
+using UIKit;
+#else
 using MonoTouch.CoreGraphics;
-using MonoTouch.Dialog;
 using MonoTouch.Foundation;
 using MonoTouch.ObjCRuntime;
 using MonoTouch.UIKit;
+using CGRect=System.Drawing.RectangleF;
+using CGSize=System.Drawing.SizeF;
+using CGPoint=System.Drawing.PointF;
+#endif
+using MonoTouch.Dialog;
 
 namespace FlyoutNavigation
 {
@@ -39,7 +48,11 @@ namespace FlyoutNavigation
 		DialogViewController navigation;
 		int selectedIndex;
 		UIView shadowView;
+		#if __UNIFIED__
+		nfloat startX;
+		#else
 		float startX;
+		#endif
 		UIColor tintColor;
 		UIView statusImage;
 		protected UIViewController[] viewControllers;
@@ -72,7 +85,7 @@ namespace FlyoutNavigation
 			}
 			set {
 				position = value;
-				shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
+				shadowView.Layer.ShadowOffset = new CGSize(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			}
 		}
 
@@ -193,19 +206,26 @@ namespace FlyoutNavigation
 		}
 
 		bool isIos7 = false;
+		bool isIos8 = false;
+		class UAUIView : UIView
+		{
+			[Export ("accessibilityIdentifier")]
+			public string AccessibilityId {get;set;}
+		}
+
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
-			statusImage = new UIView{ClipsToBounds = true}.SetAccessibilityId( "statusbar");
+			statusImage = new UAUIView{ ClipsToBounds = true, AccessibilityId = "statusbar" };//.SetAccessibilityId( "statusbar");
 			navigation = new DialogViewController(navigationStyle, null);
 			navigation.OnSelection += NavigationItemSelected;
-			RectangleF navFrame = navigation.View.Frame;
+			CGRect navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			if (Position == FlyOutNavigationPosition.Right)
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			navigation.View.Frame = navFrame;
 			View.AddSubview(navigation.View);
-			//SearchBar = new UISearchBar(new RectangleF(0, 0, navigation.TableView.Bounds.Width, 44))
+			//SearchBar = new UISearchBar(new CGRect(0, 0, navigation.TableView.Bounds.Width, 44))
 			//	{
 			//		//Delegate = new SearchDelegate (this),
 			//		TintColor = TintColor
@@ -213,20 +233,22 @@ namespace FlyoutNavigation
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
+			isIos8 = version.Major >= 8;
 			isIos7 = version.Major >= 7;
 			if(isIos7)
-				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22))
+				navigation.TableView.TableHeaderView = new UIView(new CGRect(0, 0, 320, 22))
 			{
 				BackgroundColor = UIColor.Clear
 			};
-			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
+			navigation.TableView.TableFooterView = new UIView(new CGRect(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView();
+			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true}.SetAccessibilityId("flyOutShadowLayer");
 			shadowView.BackgroundColor = UIColor.White;
-			shadowView.Layer.ShadowOffset = new SizeF(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
+			shadowView.Layer.ShadowOffset = new CGSize(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
-			closeButton = new UIButton();
+			closeButton = new UIButton ();
+			closeButton.AccessibilityLabel = "Close Menu";
 			closeButton.TouchUpInside += delegate { HideMenu(); };
 			AlwaysShowLandscapeMenu = true;
 
@@ -245,7 +267,7 @@ namespace FlyoutNavigation
 		public override void ViewDidLayoutSubviews()
 		{
 			base.ViewDidLayoutSubviews();
-			RectangleF navFrame = View.Bounds;
+			CGRect navFrame = View.Bounds;
 			//			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
 			//			navFrame.Height -= navFrame.Y;
 			//this.statusbar
@@ -263,9 +285,9 @@ namespace FlyoutNavigation
 			if (!HideShadow)
 				View.InsertSubviewBelow(shadowView, mainView);
 			navigation.View.Hidden = false;
-			RectangleF frame = mainView.Frame;
+			CGRect frame = mainView.Frame;
 			shadowView.Frame = frame;
-			float translation = panGesture.TranslationInView(View).X;
+			var translation = panGesture.TranslationInView(View).X;
 			if (panGesture.State == UIGestureRecognizerState.Began)
 			{
 				startX = frame.X;
@@ -291,8 +313,8 @@ namespace FlyoutNavigation
 			}
 			else if (panGesture.State == UIGestureRecognizerState.Ended)
 			{
-				float velocity = panGesture.VelocityInView(View).X;
-				float newX = translation + startX;
+				var velocity = panGesture.VelocityInView(View).X;
+				var newX = translation + startX;
 				bool show = Math.Abs (velocity) > sidebarFlickVelocity ? velocity > 0 : newX > (menuWidth / 2);
 				if (Position == FlyOutNavigationPosition.Right) {
 					show = Math.Abs(velocity) > sidebarFlickVelocity ? velocity < 0 : newX < -(menuWidth / 2);
@@ -307,11 +329,11 @@ namespace FlyoutNavigation
 
 		public override void ViewWillAppear(bool animated)
 		{
-			RectangleF navFrame = navigation.View.Frame;
+			CGRect navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			if (Position == FlyOutNavigationPosition.Right)
 				navFrame.X = mainView.Frame.Width - menuWidth;
-			navFrame.Location = PointF.Empty;
+			navFrame.Location = CGPoint.Empty;
 			navigation.View.Frame = navFrame;
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
 			var frame = mainView.Frame;
@@ -351,7 +373,7 @@ namespace FlyoutNavigation
 				isOpen = IsOpen;
 			}
 			CurrentViewController = ViewControllers[SelectedIndex];
-			RectangleF frame = View.Bounds;
+			CGRect frame = View.Bounds;
 			if (isOpen || ShouldStayOpen)
 				frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
 
@@ -378,7 +400,7 @@ namespace FlyoutNavigation
 					navigation.View.Hidden = false;
 					closeButton.Frame = mainView.Frame;
 					shadowView.Frame = mainView.Frame;
-					var statusFrame = statusImage.Frame;
+					var statusFrame = UIApplication.SharedApplication.StatusBarFrame;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
 					if (!ShouldStayOpen)
@@ -389,7 +411,7 @@ namespace FlyoutNavigation
 					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 					//UIView.SetAnimationDuration(2);
 					setViewSize();
-					RectangleF frame = mainView.Frame;
+					CGRect frame = mainView.Frame;
 					frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
 					SetLocation(frame);
 					setViewSize();
@@ -404,8 +426,8 @@ namespace FlyoutNavigation
 
 		void setViewSize()
 		{
-			RectangleF frame = View.Bounds;
-			//frame.Location = PointF.Empty;
+			CGRect frame = View.Bounds;
+			//frame.Location = CGPoint.Empty;
 			if (ShouldStayOpen)
 				frame.Width -= menuWidth;
 			if (mainView.Bounds == frame)
@@ -413,14 +435,14 @@ namespace FlyoutNavigation
 			mainView.Bounds = frame;
 		}
 
-		void SetLocation(RectangleF frame)
+		void SetLocation(CGRect frame)
 		{
-			mainView.Layer.AnchorPoint = new PointF(.5f, .5f);
+			mainView.Layer.AnchorPoint = new CGPoint(.5f, .5f);
 			frame.Y = 0;
 			if (mainView.Frame.Location == frame.Location)
 				return;
 			frame.Size = mainView.Frame.Size;
-			var center = new PointF(frame.Left + frame.Width/2,
+			var center = new CGPoint(frame.Left + frame.Width/2,
 				frame.Top + frame.Height/2);
 			mainView.Center = center;
 			shadowView.Center = center;
@@ -433,7 +455,17 @@ namespace FlyoutNavigation
 				statusImage.Frame = statusFrame;
 			}
 		}
-		public bool DisableStatusBarMoving {get;set;}
+		bool disableStatusBarMoving;
+		public bool DisableStatusBarMoving {
+			get {
+				if (isIos8)
+					return true;
+				return disableStatusBarMoving;
+			}
+			set {
+				disableStatusBarMoving = value;
+			}
+		}
 		void getStatus()
 		{
 			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null || ShouldStayOpen)
@@ -469,7 +501,7 @@ namespace FlyoutNavigation
 
 		public void HideMenu()
 		{
-			if (mainView == null || mainView.Frame.X == 0)
+			if (mainView == null || mainView.Frame.X == 0 || ShouldStayOpen)
 				return;
 
 			EnsureInvokedOnMainThread(delegate
@@ -485,7 +517,7 @@ namespace FlyoutNavigation
 					UIView.Animate(.2,	() =>
 						{
 							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-							RectangleF frame = View.Bounds;
+							CGRect frame = View.Bounds;
 							frame.X = 0;
 							setViewSize();
 							SetLocation(frame);
@@ -626,11 +658,11 @@ namespace FlyoutNavigation
 
 	internal static class Helpers
 	{
-		static readonly IntPtr selAccessibilityIdentifier_Handle = Selector.GetHandle ("accessibilityIdentifier");
-		public static UIView SetAccessibilityId(this UIView view, string id)
+		static readonly IntPtr setAccessibilityIdentifier_Handle = Selector.GetHandle ("setAccessibilityIdentifier:");
+		public static T SetAccessibilityId<T>(this T view, string id) where T : NSObject
 		{
 			var nsId = NSString.CreateNative (id);
-			Messaging.void_objc_msgSend_IntPtr (view.Handle, selAccessibilityIdentifier_Handle, nsId);
+			//ObjCRuntime.Messaging.void_objc_msgSend_IntPtr (view.Handle, setAccessibilityIdentifier_Handle, nsId);
 			return view;
 		}
 	}
