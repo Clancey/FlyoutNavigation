@@ -86,4 +86,10 @@
   <ItemGroup>
     <BundleResource Include="Default-568h%402x.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\FlyoutNavigation\FlyoutNavigation.csproj">
+      <Project>{BEC8904A-0E39-4117-9E4D-AAE6A6A50B4A}</Project>
+      <Name>FlyoutNavigation</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
