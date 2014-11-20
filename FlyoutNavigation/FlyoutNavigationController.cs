@@ -218,8 +218,7 @@ namespace FlyoutNavigation
 			DisableStatusBarMoving = true;
 			statusImage = new UAUIView{ ClipsToBounds = true, AccessibilityId = "statusbar" };//.SetAccessibilityId( "statusbar");
 			navigation = new DialogViewController(navigationStyle, null);
-			navigation.OnSelection += NavigationItemSelected;
-			CGRect navFrame = navigation.View.Frame;
+			var navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			if (Position == FlyOutNavigationPosition.Right)
 				navFrame.X = mainView.Frame.Width - menuWidth;
@@ -249,16 +248,24 @@ namespace FlyoutNavigation
 			shadowView.Layer.ShadowOpacity = .75f;
 			closeButton = new UIButton ();
 			closeButton.AccessibilityLabel = "Close Menu";
-			closeButton.TouchUpInside += delegate { HideMenu(); };
+			closeButton.TouchUpInside += CloseButtonTapped;
+
 			AlwaysShowLandscapeMenu = true;
 
-			View.AddGestureRecognizer (new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
+			View.AddGestureRecognizer (gesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 		}
 
+		void CloseButtonTapped (object sender, EventArgs e)
+		{
+			HideMenu(); 
+		}
+		OpenMenuGestureRecognizer gesture;
 		public event UITouchEventArgs ShouldReceiveTouch;
-
+		public bool DisableGesture { get; set; }
 		internal bool shouldReceiveTouch(UIGestureRecognizer gesture, UITouch touch)
 		{
+			if (DisableGesture)
+				return false;
 			if (ShouldReceiveTouch != null)
 				return ShouldReceiveTouch(gesture, touch);
 			return true;
@@ -339,7 +346,13 @@ namespace FlyoutNavigation
 			var frame = mainView.Frame;
 			setViewSize ();
 			SetLocation (frame);
+			navigation.OnSelection += NavigationItemSelected;
 			base.ViewWillAppear(animated);
+		}
+		public override void ViewWillDisappear (bool animated)
+		{
+			base.ViewWillDisappear (animated);
+			navigation.OnSelection -= NavigationItemSelected;
 		}
 
 		protected void NavigationItemSelected(NSIndexPath indexPath)
@@ -653,6 +666,21 @@ namespace FlyoutNavigation
 		{
 			return NSThread.Current.IsMainThread;
 			//return Messaging.bool_objc_msgSend(GetClassHandle("NSThread"), new Selector("isMainThread").Handle);
+		}
+		protected override void Dispose (bool disposing)
+		{
+			base.Dispose (disposing);
+			SelectedIndexChanged = null;
+			if(ShouldReceiveTouch != null)
+			foreach (var d in ShouldReceiveTouch.GetInvocationList ())
+				ShouldReceiveTouch -= (UITouchEventArgs)d;
+			View.RemoveGestureRecognizer (gesture);
+			closeButton.TouchUpInside -= CloseButtonTapped;
+			closeButton = null;
+
+			if (this.CurrentViewController != null) {
+				this.CurrentViewController.View.RemoveFromSuperview ();
+			}
 		}
 	}
 
