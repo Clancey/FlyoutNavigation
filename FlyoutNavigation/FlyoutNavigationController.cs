@@ -13,6 +13,7 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using MonoTouch.CoreGraphics;
 using MonoTouch.Dialog;
@@ -223,6 +224,8 @@ namespace FlyoutNavigation
 		}
 
 		bool isIos7 = false;
+		bool swapHeightAndWidthInLandscape = true;
+
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
 			DisableStatusBarMoving = true;
@@ -249,6 +252,14 @@ namespace FlyoutNavigation
 				navigation.TableView.TableHeaderView = new UIView(new RectangleF(0, 0, 320, 22));
 				navigation.TableView.BackgroundColor = UIColor.Clear;
 			}
+
+			// MDR 10/12/2014 - iOS 7 confuses height and width when rotated
+			// MDR 10/12/2014 - Not sure about previous versions
+			swapHeightAndWidthInLandscape = true;
+
+			// MDR 10/12/2014 - iOS 8 fixes this
+			if (version.Major >= 8)
+				swapHeightAndWidthInLandscape = false;
 
 			navigation.TableView.TableFooterView = new UIView(new RectangleF(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
@@ -463,8 +474,16 @@ namespace FlyoutNavigation
             // mribbons@github - 28/08/2014 - Fix issue where mainview doesn't have full width sometimes after menu is opened in landscape, or app is started in landscape
             if (InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)
             {
-				frame.Width = UIScreen.MainScreen.Bounds.Height - (ShouldStayOpen ? menuWidth : 0);
-                frame.Height = UIScreen.MainScreen.Bounds.Width;
+				if (swapHeightAndWidthInLandscape)
+				{
+					frame.Width = UIScreen.MainScreen.Bounds.Height - (ShouldStayOpen ? menuWidth : 0);
+					frame.Height = UIScreen.MainScreen.Bounds.Width;
+				}
+				else
+				{
+					frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
+					frame.Height = UIScreen.MainScreen.Bounds.Height;
+				}
             }
             else
             {
@@ -657,9 +676,18 @@ namespace FlyoutNavigation
 			if (DisableRotation)
 				return toInterfaceOrientation == InterfaceOrientation;
 
+			UIInterfaceOrientationMask mask = CurrentViewController.GetSupportedInterfaceOrientations();
+			UIInterfaceOrientation orientation = CurrentViewController.PreferredInterfaceOrientationForPresentation();
+
 			bool theReturn = CurrentViewController == null
 				? true
 				: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+
+			if (CurrentViewController != null)
+				Debug.WriteLine("Should auto rotate: " + toInterfaceOrientation.ToString() + ": " + theReturn);
+			else
+				Debug.WriteLine("Should auto rotate: View is null");
+
 			return theReturn;
 		}
 
