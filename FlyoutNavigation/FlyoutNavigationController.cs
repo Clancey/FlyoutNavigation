@@ -13,12 +13,14 @@
 //    limitations under the License.
 
 using System;
+using System.Diagnostics;
 #if __UNIFIED__
 using CoreGraphics;
 using Foundation;
 using ObjCRuntime;
 using UIKit;
 #else
+using System.Drawing;
 using MonoTouch.CoreGraphics;
 using MonoTouch.Foundation;
 using MonoTouch.ObjCRuntime;
@@ -46,6 +48,32 @@ namespace FlyoutNavigation
 		bool firstLaunch = true;
 		FlyOutNavigationPosition position;
 		DialogViewController navigation;
+		public DialogViewController NavigationViewController
+		{
+			get { return navigation; }
+		}
+
+		protected UIView menuBorder;
+		protected UIColor menuBorderColor = UIColor.LightGray;
+		public UIColor MenuBorderColor
+		{
+			get { return menuBorderColor; }
+			set { menuBorderColor = value;
+				if (menuBorder != null)
+				{
+					menuBorder.BackgroundColor = menuBorderColor;
+					menuBorder.SetNeedsDisplay();
+				}
+			}
+		}
+
+		protected bool showMenuBorder = false;
+		public bool ShowMenuBorder
+		{
+			get { return showMenuBorder; }
+			set { showMenuBorder = value; }
+		}
+
 		int selectedIndex;
 		UIView shadowView;
 		#if __UNIFIED__
@@ -95,6 +123,10 @@ namespace FlyoutNavigation
 
 		public bool ForceMenuOpen { get; set; }
 
+		private bool AlreadyLayedOut = false;
+
+		public bool NavigationOpenedByLandscapeRotation { get; private set; }
+
 		public bool HideShadow
 		{
 			get { return hideShadow; }
@@ -115,8 +147,8 @@ namespace FlyoutNavigation
 
 		public UIColor ShadowViewColor
 		{
-			get { return shadowView.BackgroundColor; }
-			set { shadowView.BackgroundColor = value; }
+			get { return new UIColor(shadowView.Layer.BackgroundColor); }
+			set { shadowView.Layer.BackgroundColor = value.CGColor; }
 		}
 
 		public UIViewController CurrentViewController { get; private set; }
@@ -212,6 +244,7 @@ namespace FlyoutNavigation
 			[Export ("accessibilityIdentifier")]
 			public string AccessibilityId {get;set;}
 		}
+		bool swapHeightAndWidthInLandscape = true;
 
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
@@ -234,23 +267,36 @@ namespace FlyoutNavigation
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
 			isIos8 = version.Major >= 8;
 			isIos7 = version.Major >= 7;
-			if(isIos7)
-				navigation.TableView.TableHeaderView = new UIView(new CGRect(0, 0, 320, 22))
-			{
-				BackgroundColor = UIColor.Clear
-			};
+			if(isIos7){
+				navigation.TableView.TableHeaderView = 
+					new UIView (new CGRect (0, 0, 320, 22)) {
+					BackgroundColor = UIColor.Clear
+				};
+			}
 			navigation.TableView.TableFooterView = new UIView(new CGRect(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
+
+			// MDR 10/12/2014 - iOS 7 confuses height and width when rotated
+			// MDR 10/12/2014 - Not sure about previous versions
+			swapHeightAndWidthInLandscape = true;
+
+			// MDR 10/12/2014 - iOS 8 fixes this
+			if (version.Major >= 8)
+				swapHeightAndWidthInLandscape = false;
+
 			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true}.SetAccessibilityId("flyOutShadowLayer");
-			shadowView.BackgroundColor = UIColor.White;
+			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel", AccessibilityIdentifier = "flyOutShadowLayer" , IsAccessibilityElement = true};
+
+			shadowView.BackgroundColor = UIColor.Clear;
 			shadowView.Layer.ShadowOffset = new CGSize(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
+
 			shadowView.Layer.ShadowOpacity = .75f;
 			closeButton = new UIButton ();
 			closeButton.AccessibilityLabel = "Close Menu";
 			closeButton.TouchUpInside += CloseButtonTapped;
 
 			AlwaysShowLandscapeMenu = true;
+			NavigationOpenedByLandscapeRotation = false;
 
 			View.AddGestureRecognizer (gesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 		}
@@ -283,6 +329,19 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			if (navigation.View.Frame != navFrame)
 				navigation.View.Frame = navFrame;
+
+			if (!AlreadyLayedOut)
+			{
+				AlreadyLayedOut = true;
+
+				if (AlwaysShowLandscapeMenu && (InterfaceOrientation == UIInterfaceOrientation.LandscapeRight || InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft))
+					NavigationOpenedByLandscapeRotation = true;
+
+				if (showMenuBorder)
+				{
+					DisplayMenuBorder(mainView.Frame);
+				}
+			}
 		}
 
 		public void DragContentView(UIPanGestureRecognizer panGesture)
@@ -420,6 +479,12 @@ namespace FlyoutNavigation
 						View.AddSubview(closeButton);
 					if (!HideShadow)
 						View.InsertSubviewBelow (shadowView, mainView);
+					if (ShowMenuBorder)
+					{
+						//menuBorder.Frame = mainView.Frame;
+						//menuBorder.Frame.Width = 1f;
+						View.InsertSubviewBelow(menuBorder, mainView);
+					}
 					UIView.BeginAnimations("slideMenu");
 					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
 					//UIView.SetAnimationDuration(2);
@@ -443,9 +508,30 @@ namespace FlyoutNavigation
 			//frame.Location = CGPoint.Empty;
 			if (ShouldStayOpen)
 				frame.Width -= menuWidth;
-			if (mainView.Bounds == frame)
-				return;
+
+            // mribbons@github - 28/08/2014 - Fix issue where mainview doesn't have full width sometimes after menu is opened in landscape, or app is started in landscape
+            if (InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)
+            {
+				if (swapHeightAndWidthInLandscape)
+				{
+					frame.Width = UIScreen.MainScreen.Bounds.Height - (ShouldStayOpen ? menuWidth : 0);
+					frame.Height = UIScreen.MainScreen.Bounds.Width;
+				}
+				else
+				{
+					frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
+					frame.Height = UIScreen.MainScreen.Bounds.Height;
+				}
+            }
+            else
+            {
+				frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
+                frame.Height = UIScreen.MainScreen.Bounds.Height;
+            }
+
 			mainView.Bounds = frame;
+
+			DisplayMenuBorder(mainView.Frame);
 		}
 
 		void SetLocation(CGRect frame)
@@ -460,6 +546,8 @@ namespace FlyoutNavigation
 			mainView.Center = center;
 			shadowView.Center = center;
 
+			DisplayMenuBorder(frame);
+
 			if (Math.Abs(frame.X - 0) > float.Epsilon)
 			{
 				getStatus();
@@ -468,6 +556,7 @@ namespace FlyoutNavigation
 				statusImage.Frame = statusFrame;
 			}
 		}
+
 		bool disableStatusBarMoving;
 		public bool DisableStatusBarMoving {
 			get {
@@ -479,6 +568,31 @@ namespace FlyoutNavigation
 				disableStatusBarMoving = value;
 			}
 		}
+
+		private void DisplayMenuBorder(CGRect frame)
+		{
+			if (ShowMenuBorder && menuBorder == null)
+			{
+				menuBorder = new UIView();
+				menuBorder.BackgroundColor = menuBorderColor;
+
+				View.InsertSubviewAbove(menuBorder, mainView);
+			}
+
+			if (ShowMenuBorder)
+			{
+				CGRect borderFrame = new CGRect();
+				// MDR 29/08/2014 - Prevent bottom part of border missing momentarily after rotate from landscape to portrait
+				
+				borderFrame.Height = UIScreen.MainScreen.Bounds.Height;
+				borderFrame.Width = 1f;
+				borderFrame.X = frame.X - 1f;
+				//borderFrame.X = navigation.View.Frame.Right + 1f;
+				borderFrame.Y = 0;
+				menuBorder.Frame = borderFrame;
+			}
+		}
+
 		void getStatus()
 		{
 			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null || ShouldStayOpen)
@@ -568,7 +682,10 @@ namespace FlyoutNavigation
 					if (!IsOpen && CurrentViewController != null && CurrentViewController.IsViewLoaded)
 						ResignFirstResponders(CurrentViewController.View);
 					if (IsOpen)
+					{
 						HideMenu();
+						NavigationOpenedByLandscapeRotation = false;
+					}
 					else
 						ShowMenu();
 				});
@@ -609,9 +726,18 @@ namespace FlyoutNavigation
 			if (DisableRotation)
 				return toInterfaceOrientation == InterfaceOrientation;
 
+			UIInterfaceOrientationMask mask = CurrentViewController.GetSupportedInterfaceOrientations();
+			UIInterfaceOrientation orientation = CurrentViewController.PreferredInterfaceOrientationForPresentation();
+
 			bool theReturn = CurrentViewController == null
 				? true
 				: CurrentViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+
+			if (CurrentViewController != null)
+				Debug.WriteLine("Should auto rotate: " + toInterfaceOrientation.ToString() + ": " + theReturn);
+			else
+				Debug.WriteLine("Should auto rotate: View is null");
+
 			return theReturn;
 		}
 
@@ -631,17 +757,39 @@ namespace FlyoutNavigation
 		{
 			base.DidRotate(fromInterfaceOrientation);
 
+			// mribbons@github - 28/08/2014 - Fix menu width size chunk of shadowView missing when rotating to portait mode
+			shadowView.Frame = mainView.Frame;
+
 			if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone)
 				return;
-			switch (InterfaceOrientation)
+
+			// mribbons@github - 28/08/2014 - Only do this is should stay open is false. 
+			// Note that this doesn't seem to work well anyway, menu shows and hides, or doesn't hide when switching to portrait (can't recall which but depends how AlwaysShowLandscapeMenu and ForceMenuOpen are set)
+			if (AlwaysShowLandscapeMenu)
 			{
-			case UIInterfaceOrientation.LandscapeLeft:
-			case UIInterfaceOrientation.LandscapeRight:
-				ShowMenu ();
-				return;
-			default:
-				HideMenu ();
-				return;
+				switch (InterfaceOrientation)
+				{
+					case UIInterfaceOrientation.LandscapeLeft:
+					case UIInterfaceOrientation.LandscapeRight:
+						if (!IsOpen)
+						{
+							NavigationOpenedByLandscapeRotation = true;
+							ShowMenu();
+						}
+						return;
+					default:
+						// mribbons@github - 28/08/2014 - Only close the menu if it was opened by rotating
+						if (NavigationOpenedByLandscapeRotation)
+						{
+							NavigationOpenedByLandscapeRotation = false;
+							HideMenu();
+						}
+						else
+						{
+							DisplayMenuBorder(mainView.Frame);
+						}
+						return;
+				}
 			}
 		}
 
@@ -681,17 +829,6 @@ namespace FlyoutNavigation
 			if (this.CurrentViewController != null) {
 				this.CurrentViewController.View.RemoveFromSuperview ();
 			}
-		}
-	}
-
-	internal static class Helpers
-	{
-		static readonly IntPtr setAccessibilityIdentifier_Handle = Selector.GetHandle ("setAccessibilityIdentifier:");
-		public static T SetAccessibilityId<T>(this T view, string id) where T : NSObject
-		{
-			var nsId = NSString.CreateNative (id);
-			//ObjCRuntime.Messaging.void_objc_msgSend_IntPtr (view.Handle, setAccessibilityIdentifier_Handle, nsId);
-			return view;
 		}
 	}
 }
