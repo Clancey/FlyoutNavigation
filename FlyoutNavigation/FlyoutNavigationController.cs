@@ -217,7 +217,8 @@ namespace FlyoutNavigation
 		{
 			DisableStatusBarMoving = true;
 			statusImage = new UAUIView{ ClipsToBounds = true, AccessibilityId = "statusbar" };//.SetAccessibilityId( "statusbar");
-			navigation = new DialogViewController(navigationStyle, null);
+			navigation = new DialogViewController (navigationStyle, null);
+			navigation.TableView.AccessibilityIdentifier = "FlyoutMenu";
 			var navFrame = navigation.View.Frame;
 			navFrame.Width = menuWidth;
 			if (Position == FlyOutNavigationPosition.Right)
@@ -241,12 +242,13 @@ namespace FlyoutNavigation
 			};
 			navigation.TableView.TableFooterView = new UIView(new CGRect(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 			navigation.TableView.ScrollsToTop = false;
-			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true}.SetAccessibilityId("flyOutShadowLayer");
+			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true};
 			shadowView.BackgroundColor = UIColor.White;
 			shadowView.Layer.ShadowOffset = new CGSize(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
 			shadowView.Layer.ShadowColor = UIColor.Black.CGColor;
 			shadowView.Layer.ShadowOpacity = .75f;
 			closeButton = new UIButton ();
+			closeButton.AccessibilityHint = closeButton.AccessibilityIdentifier ="CloseMenu";
 			closeButton.AccessibilityLabel = "Close Menu";
 			closeButton.TouchUpInside += CloseButtonTapped;
 
@@ -411,7 +413,6 @@ namespace FlyoutNavigation
 					//navigation.ReloadData ();
 					//isOpen = true;
 					navigation.View.Hidden = false;
-					closeButton.Frame = mainView.Frame;
 					shadowView.Frame = mainView.Frame;
 					var statusFrame = UIApplication.SharedApplication.StatusBarFrame;
 					statusFrame.X = mainView.Frame.X;
@@ -430,7 +431,9 @@ namespace FlyoutNavigation
 					setViewSize();
 					frame = mainView.Frame;
 					shadowView.Frame = frame;
-					closeButton.Frame = frame;
+					var f = frame;
+					f.Width -= frame.X;
+					closeButton.AccessibilityFrame = closeButton.Frame = f;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
 					UIView.CommitAnimations();
@@ -681,17 +684,6 @@ namespace FlyoutNavigation
 			if (this.CurrentViewController != null) {
 				this.CurrentViewController.View.RemoveFromSuperview ();
 			}
-		}
-	}
-
-	internal static class Helpers
-	{
-		static readonly IntPtr setAccessibilityIdentifier_Handle = Selector.GetHandle ("setAccessibilityIdentifier:");
-		public static T SetAccessibilityId<T>(this T view, string id) where T : NSObject
-		{
-			var nsId = NSString.CreateNative (id);
-			//ObjCRuntime.Messaging.void_objc_msgSend_IntPtr (view.Handle, setAccessibilityIdentifier_Handle, nsId);
-			return view;
 		}
 	}
 }
