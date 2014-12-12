@@ -246,7 +246,6 @@ namespace FlyoutNavigation
 			[Export ("accessibilityIdentifier")]
 			public string AccessibilityId {get;set;}
 		}
-		bool swapHeightAndWidthInLandscape = true;
 
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
@@ -260,11 +259,6 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			navigation.View.Frame = navFrame;
 			View.AddSubview(navigation.View);
-			//SearchBar = new UISearchBar(new CGRect(0, 0, navigation.TableView.Bounds.Width, 44))
-			//	{
-			//		//Delegate = new SearchDelegate (this),
-			//		TintColor = TintColor
-			//	};
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
@@ -278,13 +272,6 @@ namespace FlyoutNavigation
 			}
 			navigation.TableView.TableFooterView = new UIView(new CGRect(0, 0, 100, 100)) {BackgroundColor = UIColor.Clear};
 
-			// MDR 10/12/2014 - iOS 7 confuses height and width when rotated
-			// MDR 10/12/2014 - Not sure about previous versions
-			swapHeightAndWidthInLandscape = true;
-
-			// MDR 10/12/2014 - iOS 8 fixes this
-			if (version.Major >= 8)
-				swapHeightAndWidthInLandscape = false;
 
 			navigation.TableView.ScrollsToTop = false;
 			shadowView = new UIView(){AccessibilityLabel = "flyOutShadowLayeLabel" , IsAccessibilityElement = true};
@@ -328,7 +315,7 @@ namespace FlyoutNavigation
 		public override void ViewDidLayoutSubviews()
 		{
 			base.ViewDidLayoutSubviews();
-			CGRect navFrame = View.Bounds;
+			CGRect navFrame = GetViewBounds();
 			//			navFrame.Y += UIApplication.SharedApplication.StatusBarFrame.Height;
 			//			navFrame.Height -= navFrame.Y;
 			//this.statusbar
@@ -413,9 +400,18 @@ namespace FlyoutNavigation
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
 			var frame = mainView.Frame;
 			setViewSize ();
+			frame.Size = mainView.Frame.Size;
 			SetLocation (frame);
 			navigation.OnSelection += NavigationItemSelected;
 			base.ViewWillAppear(animated);
+		}
+		public override void ViewDidAppear (bool animated)
+		{
+			base.ViewDidAppear (animated);
+			var frame = mainView.Frame;
+			setViewSize ();
+			frame.Size = mainView.Frame.Size;
+			SetLocation (frame);
 		}
 		public override void ViewWillDisappear (bool animated)
 		{
@@ -454,14 +450,14 @@ namespace FlyoutNavigation
 				isOpen = IsOpen;
 			}
 			CurrentViewController = ViewControllers[SelectedIndex];
-			CGRect frame = View.Bounds;
+			CGRect frame = GetViewBounds();
 			if (isOpen || ShouldStayOpen)
 				frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
 
-			setViewSize();
-			SetLocation(frame);
 			View.AddSubview(mainView);
 			AddChildViewController(CurrentViewController);
+			setViewSize();
+			SetLocation(frame);
 			if (!ShouldStayOpen)
 				HideMenu();
 			if (SelectedIndexChanged != null)
@@ -511,34 +507,24 @@ namespace FlyoutNavigation
 
 		void setViewSize()
 		{
-			CGRect frame = View.Bounds;
-			//frame.Location = CGPoint.Empty;
-			if (ShouldStayOpen)
-				frame.Width -= menuWidth;
+			CGRect frame = GetViewBounds();
+			frame.Width -= ShouldStayOpen ? menuWidth : 0;
 
-            // mribbons@github - 28/08/2014 - Fix issue where mainview doesn't have full width sometimes after menu is opened in landscape, or app is started in landscape
-            if (InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)
-            {
-				if (swapHeightAndWidthInLandscape)
-				{
-					frame.Width = UIScreen.MainScreen.Bounds.Height - (ShouldStayOpen ? menuWidth : 0);
-					frame.Height = UIScreen.MainScreen.Bounds.Width;
-				}
-				else
-				{
-					frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
-					frame.Height = UIScreen.MainScreen.Bounds.Height;
-				}
-            }
-            else
-            {
-				frame.Width = UIScreen.MainScreen.Bounds.Width - (ShouldStayOpen ? menuWidth : 0);
-                frame.Height = UIScreen.MainScreen.Bounds.Height;
-            }
-
-			mainView.Bounds = frame;
+ 			mainView.Frame = frame;
 
 			DisplayMenuBorder(mainView.Frame);
+		}
+
+		CGRect GetViewBounds()
+		{
+			CGRect frame = View.Bounds;
+			if ((InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)) {
+				var width = NMath.Max (frame.Width, frame.Height);
+				var height = NMath.Min (frame.Width, frame.Height);
+				frame.Width = width;
+				frame.Height = height;
+			}
+			return frame;
 		}
 
 		void SetLocation(CGRect frame)
@@ -651,7 +637,7 @@ namespace FlyoutNavigation
 					UIView.Animate(.2,	() =>
 						{
 							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
-							CGRect frame = View.Bounds;
+							CGRect frame = GetViewBounds();
 							frame.X = 0;
 							setViewSize();
 							SetLocation(frame);
