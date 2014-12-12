@@ -400,7 +400,6 @@ namespace FlyoutNavigation
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
 			var frame = mainView.Frame;
 			setViewSize ();
-			frame.Size = mainView.Frame.Size;
 			SetLocation (frame);
 			navigation.OnSelection += NavigationItemSelected;
 			base.ViewWillAppear(animated);
@@ -410,7 +409,6 @@ namespace FlyoutNavigation
 			base.ViewDidAppear (animated);
 			var frame = mainView.Frame;
 			setViewSize ();
-			frame.Size = mainView.Frame.Size;
 			SetLocation (frame);
 		}
 		public override void ViewWillDisappear (bool animated)
@@ -510,7 +508,7 @@ namespace FlyoutNavigation
 			CGRect frame = GetViewBounds();
 			frame.Width -= ShouldStayOpen ? menuWidth : 0;
 
- 			mainView.Frame = frame;
+ 			mainView.Bounds = frame;
 
 			DisplayMenuBorder(mainView.Frame);
 		}
