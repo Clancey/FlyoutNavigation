@@ -25,6 +25,11 @@
     <OutputPath>bin\unified\iPhoneSimulator\Debug</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\iPhoneSimulator\Debug</IntermediateOutputPath>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
+    <MtouchArch>i386</MtouchArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <DebugType>none</DebugType>
@@ -37,6 +42,11 @@
     <OutputPath>bin\unified\iPhoneSimulator\Release</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\iPhoneSimulator\Release</IntermediateOutputPath>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
+    <MtouchArch>i386</MtouchArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <DebugSymbols>True</DebugSymbols>
@@ -54,6 +64,11 @@
     <OutputPath>bin\unified\iPhone\Debug</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\iPhone\Debug</IntermediateOutputPath>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
+    <MtouchArch>ARMv7, ARM64</MtouchArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <DebugType>none</DebugType>
@@ -66,6 +81,11 @@
     <OutputPath>bin\unified\iPhone\Release</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\iPhone\Release</IntermediateOutputPath>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
+    <MtouchArch>ARMv7</MtouchArch>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -81,6 +101,11 @@
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <Compile Include="MainController.cs" />
+    <Compile Include="SwipableTableView.cs" />
+    <Compile Include="MyStoryboardViewcontroller.cs" />
+    <Compile Include="MyStoryboardViewcontroller.designer.cs">
+      <DependentUpon>MyStoryboardViewController.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
@@ -91,5 +116,8 @@
       <Project>{BEC8904A-0E39-4117-9E4D-AAE6A6A50B4A}</Project>
       <Name>FlyoutNavigation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InterfaceDefinition Include="MyStoryBoard.storyboard" />
   </ItemGroup>
 </Project>
