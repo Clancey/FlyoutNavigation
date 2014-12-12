@@ -519,8 +519,17 @@ namespace FlyoutNavigation
 		{
 			CGRect frame = View.Bounds;
 			if ((InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)) {
+				#if UNIFIED
 				var width = NMath.Max (frame.Width, frame.Height);
+				#else
+				var width = Math.Max(frame.Width, frame.Height);
+				#endif
+
+				#if UNIFIED
 				var height = NMath.Min (frame.Width, frame.Height);
+				#else
+				var height = Math.Min(frame.Width, frame.Height);
+				#endif
 				frame.Width = width;
 				frame.Height = height;
 			}
