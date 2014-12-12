@@ -114,6 +114,8 @@ namespace FlyoutNavigation
 			set {
 				position = value;
 				shadowView.Layer.ShadowOffset = new CGSize(Position == FlyOutNavigationPosition.Left ? -5 : 5, -1);
+				if (openGesture != null)
+					openGesture.Edges = position == FlyOutNavigationPosition.Left ? UIRectEdge.Left : UIRectEdge.Right;
 			}
 		}
 
@@ -299,18 +301,23 @@ namespace FlyoutNavigation
 			AlwaysShowLandscapeMenu = true;
 			NavigationOpenedByLandscapeRotation = false;
 
-			View.AddGestureRecognizer (gesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
-		}
+			View.AddGestureRecognizer (openGesture = new UIScreenEdgePanGestureRecognizer(() => DragContentView (openGesture)){Edges = Position == FlyOutNavigationPosition.Left ? UIRectEdge.Left : UIRectEdge.Right});
+			View.AddGestureRecognizer (closeGesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 
+		}
 		void CloseButtonTapped (object sender, EventArgs e)
 		{
 			HideMenu(); 
 		}
-		OpenMenuGestureRecognizer gesture;
+		OpenMenuGestureRecognizer closeGesture;
+		UIScreenEdgePanGestureRecognizer openGesture;
 		public event UITouchEventArgs ShouldReceiveTouch;
 		public bool DisableGesture { get; set; }
 		internal bool shouldReceiveTouch(UIGestureRecognizer gesture, UITouch touch)
 		{
+			if (gesture == closeGesture && !IsOpen)
+				return false;
+
 			if (DisableGesture)
 				return false;
 			if (ShouldReceiveTouch != null)
@@ -345,8 +352,9 @@ namespace FlyoutNavigation
 			}
 		}
 
-		public void DragContentView(UIPanGestureRecognizer panGesture)
+		public void DragContentView(UIGestureRecognizer gesture)
 		{
+			var panGesture = gesture as UIPanGestureRecognizer;
 			if (ShouldStayOpen || mainView == null)
 				return;
 			if (!HideShadow)
@@ -824,7 +832,7 @@ namespace FlyoutNavigation
 			if(ShouldReceiveTouch != null)
 			foreach (var d in ShouldReceiveTouch.GetInvocationList ())
 				ShouldReceiveTouch -= (UITouchEventArgs)d;
-			View.RemoveGestureRecognizer (gesture);
+			View.RemoveGestureRecognizer (closeGesture);
 			closeButton.TouchUpInside -= CloseButtonTapped;
 			closeButton = null;
 
