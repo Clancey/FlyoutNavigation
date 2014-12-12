@@ -49,6 +49,7 @@ namespace Sample
 				},
 				new Section ("Extras")
 				{
+					new BooleanElement("Toggle",true),
 					new StringElement("Swipable Table"),
 					new StringElement("Storyboard"),
 				}
@@ -57,6 +58,8 @@ namespace Sample
 			// Create an array of UINavigationControllers that correspond to your
 			// menu items:
 			var viewControllers = Tasks.Select (x => new UINavigationController (new TaskPageController (navigation, x))).ToList ();
+			//Add null for the toggle switch
+			viewControllers.Add (null);
 			viewControllers.Add (new UINavigationController(new SwipableTableView ()));			
 			//Load from Storyboard
 			var storyboardVc = CreateViewController<MyStoryboardViewController> ("MyStoryBoard","MyStoryboardViewController");
