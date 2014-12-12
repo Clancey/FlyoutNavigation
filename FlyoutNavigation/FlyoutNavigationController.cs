@@ -503,9 +503,6 @@ namespace FlyoutNavigation
 					setViewSize();
 					frame = mainView.Frame;
 					shadowView.Frame = frame;
-					var f = frame;
-					f.Width -= frame.X;
-					closeButton.AccessibilityFrame = closeButton.Frame = f;
 					statusFrame.X = mainView.Frame.X;
 					statusImage.Frame = statusFrame;
 					UIView.CommitAnimations();
