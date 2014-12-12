@@ -46,16 +46,28 @@ namespace Sample
 				new Section ("Task List") {
 					from page in Tasks
 						select new StringElement (page) as Element
+				},
+				new Section ("Extras")
+				{
+					new StringElement("Swipable Table"),
+					new StringElement("Storyboard"),
 				}
 			};
 			
 			// Create an array of UINavigationControllers that correspond to your
 			// menu items:
-			navigation.ViewControllers = Array.ConvertAll (Tasks, title =>
-           		new UINavigationController (new TaskPageController (navigation, title))
-			);
+			var viewControllers = Tasks.Select (x => new UINavigationController (new TaskPageController (navigation, x))).ToList ();
+			viewControllers.Add (new UINavigationController(new SwipableTableView ()));			
+			//Load from Storyboard
+			var storyboardVc = CreateViewController<MyStoryboardViewController> ("MyStoryBoard","MyStoryboardViewController");
+			viewControllers.Add (new UINavigationController(storyboardVc));
+			navigation.ViewControllers = viewControllers.ToArray ();
 		}
-		
+		static T CreateViewController<T>(string storyboardName, string viewControllerStoryBoardId = "") where T : UIViewController
+		{
+			var storyboard = UIStoryboard.FromName (storyboardName,null);
+			return string.IsNullOrEmpty(viewControllerStoryBoardId) ? (T)storyboard.InstantiateInitialViewController () : (T) storyboard.InstantiateViewController(viewControllerStoryBoardId);
+		}
 		class TaskPageController : DialogViewController
 		{
 			public TaskPageController (FlyoutNavigationController navigation, string title) : base (null)
