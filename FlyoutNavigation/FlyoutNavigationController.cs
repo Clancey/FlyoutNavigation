@@ -288,7 +288,7 @@ namespace FlyoutNavigation
 			AlwaysShowLandscapeMenu = true;
 			NavigationOpenedByLandscapeRotation = false;
 
-			View.AddGestureRecognizer (openGesture = new UIScreenEdgePanGestureRecognizer(() => DragContentView (openGesture)){Edges = Position == FlyOutNavigationPosition.Left ? UIRectEdge.Left : UIRectEdge.Right});
+			View.AddGestureRecognizer (openGesture = new UIScreenEdgePanGestureRecognizer(() => DragContentView (openGesture)){Edges = Position == FlyOutNavigationPosition.Left ? UIRectEdge.Left : UIRectEdge.Right, ShouldRecognizeSimultaneously = (s,e) => true});
 			View.AddGestureRecognizer (closeGesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
 
 		}
@@ -545,7 +545,7 @@ namespace FlyoutNavigation
 				frame.Top + frame.Height/2);
 			mainView.Center = center;
 			shadowView.Center = center;
-
+			closeButton.Frame = mainView.Frame;
 			DisplayMenuBorder(frame);
 
 			if (Math.Abs(frame.X - 0) > float.Epsilon)
