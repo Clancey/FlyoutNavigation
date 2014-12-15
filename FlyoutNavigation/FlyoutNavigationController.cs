@@ -82,7 +82,6 @@ namespace FlyoutNavigation
 		float startX;
 		#endif
 		UIColor tintColor;
-		UIView statusImage;
 		protected UIViewController[] viewControllers;
 		bool hideShadow;
 
@@ -249,8 +248,6 @@ namespace FlyoutNavigation
 
 		void Initialize(UITableViewStyle navigationStyle = UITableViewStyle.Plain)
 		{
-			DisableStatusBarMoving = true;
-			statusImage = new UAUIView{ ClipsToBounds = true, AccessibilityId = "statusbar" };//.SetAccessibilityId( "statusbar");
 			navigation = new DialogViewController (navigationStyle, null);
 			navigation.TableView.AccessibilityIdentifier = "FlyoutMenu";
 			var navFrame = navigation.View.Frame;
@@ -438,9 +435,7 @@ namespace FlyoutNavigation
 					SelectedIndexChanged();
 				return;
 			}
-			if(!DisableStatusBarMoving && !ShouldStayOpen)
-				UIApplication.SharedApplication.SetStatusBarHidden(false,UIStatusBarAnimation.Fade);
-
+		
 			bool isOpen = false;
 			if (mainView != null)
 			{
@@ -474,9 +469,6 @@ namespace FlyoutNavigation
 					//isOpen = true;
 					navigation.View.Hidden = false;
 					shadowView.Frame = mainView.Frame;
-					var statusFrame = UIApplication.SharedApplication.StatusBarFrame;
-					statusFrame.X = mainView.Frame.X;
-					statusImage.Frame = statusFrame;
 					if (!ShouldStayOpen)
 						View.AddSubview(closeButton);
 					if (!HideShadow)
@@ -497,8 +489,6 @@ namespace FlyoutNavigation
 					setViewSize();
 					frame = mainView.Frame;
 					shadowView.Frame = frame;
-					statusFrame.X = mainView.Frame.X;
-					statusImage.Frame = statusFrame;
 					UIView.CommitAnimations();
 				});
 		}
@@ -548,25 +538,6 @@ namespace FlyoutNavigation
 			closeButton.Frame = mainView.Frame;
 			DisplayMenuBorder(frame);
 
-			if (Math.Abs(frame.X - 0) > float.Epsilon)
-			{
-				getStatus();
-				var statusFrame = statusImage.Frame;
-				statusFrame.X = mainView.Frame.X;
-				statusImage.Frame = statusFrame;
-			}
-		}
-
-		bool disableStatusBarMoving;
-		public bool DisableStatusBarMoving {
-			get {
-				if (isIos8)
-					return true;
-				return disableStatusBarMoving;
-			}
-			set {
-				disableStatusBarMoving = value;
-			}
 		}
 
 		private void DisplayMenuBorder(CGRect frame)
@@ -593,39 +564,6 @@ namespace FlyoutNavigation
 			}
 		}
 
-		void getStatus()
-		{
-			if (DisableStatusBarMoving || !isIos7 || statusImage.Superview != null || ShouldStayOpen)
-				return;
-			var image = captureStatusBarImage ();
-			if (image == null)
-				return;
-			this.View.AddSubview(statusImage);
-			foreach (var view in statusImage.Subviews)
-				view.RemoveFromSuperview ();
-			statusImage.AddSubview (image);
-			statusImage.Frame = UIApplication.SharedApplication.StatusBarFrame;
-			UIApplication.SharedApplication.StatusBarHidden = true;
-
-		}
-		UIView captureStatusBarImage()
-		{
-			try{
-				UIView screenShot = UIScreen.MainScreen.SnapshotView(false);
-				return screenShot;
-			}
-			catch(Exception ex) {
-				return null;
-			}
-		}
-		void hideStatus()
-		{
-			if (!isIos7)
-				return;
-			statusImage.RemoveFromSuperview();
-			UIApplication.SharedApplication.StatusBarHidden = false;
-		}
-
 		public void HideMenu()
 		{
 			if (mainView == null || mainView.Frame.X == 0 || ShouldStayOpen)
@@ -636,11 +574,6 @@ namespace FlyoutNavigation
 					//isOpen = false;
 					navigation.FinishSearch();
 					closeButton.RemoveFromSuperview();
-					shadowView.Frame = mainView.Frame;
-					var statusFrame = statusImage.Frame;
-					statusFrame.X = mainView.Frame.X;
-					statusImage.Frame = statusFrame;
-					//UIView.AnimationWillEnd += hideComplete;
 					UIView.Animate(.2,	() =>
 						{
 							UIView.SetAnimationCurve(UIViewAnimationCurve.EaseInOut);
@@ -649,8 +582,6 @@ namespace FlyoutNavigation
 							setViewSize();
 							SetLocation(frame);
 							shadowView.Frame = frame;
-							statusFrame.X = 0;
-							statusImage.Frame = statusFrame;
 						}, hideComplete);
 				});
 		}
@@ -658,7 +589,6 @@ namespace FlyoutNavigation
 		[Export("animationEnded")]
 		void hideComplete()
 		{
-			hideStatus();
 			shadowView.RemoveFromSuperview();
 			navigation.View.Hidden = true;
 		}
