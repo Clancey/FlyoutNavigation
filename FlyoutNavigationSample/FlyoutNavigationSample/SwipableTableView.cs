@@ -1,7 +1,16 @@
 ﻿using System;
-using UIKit;
 using System.Collections.Generic;
 using System.Linq;
+
+
+#if __UNIFIED__
+using UIKit;
+using Foundation;
+#else
+using MonoTouch.UIKit;
+using MonoTouch.Foundation;
+using nint=System.Int32;
+#endif
 
 namespace Sample
 {
@@ -24,7 +33,7 @@ namespace Sample
 			{
 				Rows = Enumerable.Range(0,20).Select(x=> string.Format("Row {0}",x)).ToList();
 			}
-			public override UITableViewCell GetCell (UITableView tableView, Foundation.NSIndexPath indexPath)
+			public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 			{
 				var cell = tableView.DequeueReusableCell ("cell") ?? new UITableViewCell (UITableViewCellStyle.Default,"cell");
 				cell.TextLabel.Text = Rows [indexPath.Row];
@@ -35,15 +44,15 @@ namespace Sample
 				return (nint)Rows.Count;
 			}
 
-			public override UITableViewCellEditingStyle EditingStyleForRow (UITableView tableView, Foundation.NSIndexPath indexPath)
+			public override UITableViewCellEditingStyle EditingStyleForRow (UITableView tableView, NSIndexPath indexPath)
 			{
 				return UITableViewCellEditingStyle.Delete;
 			}
-			public override bool CanEditRow (UITableView tableView, Foundation.NSIndexPath indexPath)
+			public override bool CanEditRow (UITableView tableView, NSIndexPath indexPath)
 			{
 				return true;
 			}
-			public override void CommitEditingStyle (UITableView tableView, UITableViewCellEditingStyle editingStyle, Foundation.NSIndexPath indexPath)
+			public override void CommitEditingStyle (UITableView tableView, UITableViewCellEditingStyle editingStyle, NSIndexPath indexPath)
 			{
 				if (editingStyle == UITableViewCellEditingStyle.Delete) {
 					Rows.RemoveAt (indexPath.Row);
