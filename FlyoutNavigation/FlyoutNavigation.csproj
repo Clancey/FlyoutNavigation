@@ -8,8 +8,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>FlyoutNavigation</RootNamespace>
     <AssemblyName>FlyoutNavigation</AssemblyName>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -21,7 +19,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
     <GenerateDocumentation>True</GenerateDocumentation>
-    <OutputPath>bin\unified\AnyCPU\Debug</OutputPath>
+    <OutputPath>bin\unified\Debug</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\AnyCPU\Debug</IntermediateOutputPath>
   </PropertyGroup>
@@ -33,7 +31,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
     <GenerateDocumentation>True</GenerateDocumentation>
-    <OutputPath>bin\unified\AnyCPU\Release</OutputPath>
+    <OutputPath>bin\unified\Release</OutputPath>
     <BaseIntermediateOutputPath>obj\unified\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\unified\AnyCPU\Release</IntermediateOutputPath>
   </PropertyGroup>

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyoutNavigationSample", "FlyoutNavigationSample\FlyoutNavigationSample\FlyoutNavigationSample.csproj", "{AAA188F1-E969-4095-BC66-59717D7638BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyoutNavigation", "FlyoutNavigation\FlyoutNavigation.csproj", "{BEC8904A-0E39-4117-9E4D-AAE6A6A50B4A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyoutNavigation-Classic", "FlyoutNavigation\FlyoutNavigation-Classic.csproj", "{E98F7600-6C2E-4586-A78C-D42BA89445B9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlyOutNavigationSample-Classic", "FlyoutNavigationSample\FlyoutNavigationSample\FlyOutNavigationSample-Classic.csproj", "{F7F9CC1F-0E0A-4E5D-A1B1-BB977A0CD36B}"
