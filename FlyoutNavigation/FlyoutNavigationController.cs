@@ -291,7 +291,7 @@ namespace FlyoutNavigation
 		}
 		void CloseButtonTapped (object sender, EventArgs e)
 		{
-			HideMenu(); 
+			HideMenu();
 		}
 		OpenMenuGestureRecognizer closeGesture;
 		UIScreenEdgePanGestureRecognizer openGesture;
@@ -384,6 +384,8 @@ namespace FlyoutNavigation
 					HideMenu ();
 				}
 			}
+			if(!IsOpen && closeButton != null)
+				closeButton.RemoveFromSuperview();
 		}
 
 		public override void ViewWillAppear(bool animated)
@@ -566,8 +568,10 @@ namespace FlyoutNavigation
 
 		public void HideMenu()
 		{
-			if (mainView == null || mainView.Frame.X == 0 || ShouldStayOpen)
+			if (mainView == null || mainView.Frame.X == 0 || ShouldStayOpen) {
+				closeButton.RemoveFromSuperview();
 				return;
+			}
 
 			EnsureInvokedOnMainThread(delegate
 				{
