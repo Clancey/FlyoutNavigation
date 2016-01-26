@@ -596,8 +596,8 @@ namespace FlyoutNavigation
 		[Export("animationEnded")]
 		void hideComplete()
 		{
-			shadowView.RemoveFromSuperview();
-			navigation.View.Hidden = true;
+			//shadowView.RemoveFromSuperview();
+			//navigation.View.Hidden = true;
 		}
 
 		public void ResignFirstResponders(UIView view)
