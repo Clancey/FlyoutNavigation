@@ -40,13 +40,12 @@ namespace Sample
 			navigation.View.Frame = UIScreen.MainScreen.Bounds;
 			View.AddSubview (navigation.View);
 			this.AddChildViewController (navigation);
-			
+
+			var taskList = new Section ("Task List");
+			taskList.AddAll (Tasks.Select (x => new StringElement (x)));
 			// Create the menu:
 			navigation.NavigationRoot = new RootElement ("Task List") {
-				new Section ("Task List") {
-					from page in Tasks
-						select new StringElement (page) as Element
-				},
+				taskList,
 				new Section ("Extras")
 				{
 					new BooleanElement("Toggle",true),
