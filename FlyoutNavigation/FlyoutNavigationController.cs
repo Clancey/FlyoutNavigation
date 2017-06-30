@@ -256,6 +256,7 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			navigation.View.Frame = navFrame;
 			View.AddSubview(navigation.View);
+			AddChildViewController(navigation);
 
 			TintColor = UIColor.Black;
 			var version = new System.Version(UIDevice.CurrentDevice.SystemVersion);
@@ -442,6 +443,7 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			navFrame.Location = CGPoint.Empty;
 			navigation.View.Frame = navFrame;
+			Console.WriteLine(navFrame);
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
 			var frame = mainView.Frame;
 			setViewSize ();
@@ -452,6 +454,7 @@ namespace FlyoutNavigation
 		public override void ViewDidAppear (bool animated)
 		{
 			base.ViewDidAppear (animated);
+			navigation.View.Hidden = false;
 			var frame = mainView.Frame;
 			setViewSize ();
 			SetLocation (frame);
