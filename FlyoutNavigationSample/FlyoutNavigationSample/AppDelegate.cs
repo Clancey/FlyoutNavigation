@@ -22,6 +22,7 @@ namespace Sample
 
 		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
 		{
+			Xamarin.Calabash.Start ();
 			window = new UIWindow (UIScreen.MainScreen.Bounds) {
 				RootViewController = new MainController ()
 			};

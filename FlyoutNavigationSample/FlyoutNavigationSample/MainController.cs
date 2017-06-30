@@ -40,15 +40,15 @@ namespace Sample
 			navigation.View.Frame = UIScreen.MainScreen.Bounds;
 			View.AddSubview (navigation.View);
 			this.AddChildViewController (navigation);
-			
+
+			var taskList = new Section ("Task List");
+			taskList.AddAll (Tasks.Select (x => new StringElement (x)));
 			// Create the menu:
 			navigation.NavigationRoot = new RootElement ("Task List") {
-				new Section ("Task List") {
-					from page in Tasks
-						select new StringElement (page) as Element
-				},
+				taskList,
 				new Section ("Extras")
 				{
+					new BooleanElement("Toggle",true),
 					new StringElement("Swipable Table"),
 					new StringElement("Storyboard"),
 				}
@@ -57,6 +57,8 @@ namespace Sample
 			// Create an array of UINavigationControllers that correspond to your
 			// menu items:
 			var viewControllers = Tasks.Select (x => new UINavigationController (new TaskPageController (navigation, x))).ToList ();
+			//Add null for the toggle switch
+			viewControllers.Add (null);
 			viewControllers.Add (new UINavigationController(new SwipableTableView ()));			
 			//Load from Storyboard
 			var storyboardVc = CreateViewController<MyStoryboardViewController> ("MyStoryBoard","MyStoryboardViewController");

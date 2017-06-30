@@ -288,7 +288,6 @@ namespace FlyoutNavigation
 
 			View.AddGestureRecognizer (openGesture = new UIScreenEdgePanGestureRecognizer(() => DragContentView (openGesture)){Edges = Position == FlyOutNavigationPosition.Left ? UIRectEdge.Left : UIRectEdge.Right});
 			View.AddGestureRecognizer (closeGesture = new OpenMenuGestureRecognizer (DragContentView, shouldReceiveTouch));
-
 		}
 		void CloseButtonTapped (object sender, EventArgs e)
 		{
@@ -337,6 +336,52 @@ namespace FlyoutNavigation
 			}
 		}
 
+		public event EventHandler BeginAnimation;
+		public event EventHandler EndAnimation;
+		public event EventHandler OpenChanged;
+		private bool _prevIsOpen = false;
+
+		public class OpenChangedEventArgs : EventArgs
+		{
+			public OpenChangedEventArgs(bool isOpen){IsOpen = isOpen;}
+			public bool IsOpen { get; set; }
+		}
+
+		protected virtual void OnBeginAnimation(EventArgs e)
+		{
+			EventHandler handler = BeginAnimation;
+			if (handler != null) 
+			{
+				handler (this, e);
+			}
+		}
+
+		protected virtual void OnEndAnimation(EventArgs e)
+		{
+			EventHandler handler = EndAnimation;
+			if(handler != null)
+			{
+				handler (this, e);
+			}
+		}
+
+		protected void CheckRaiseOpenChanged(){
+			OnEndAnimation (EventArgs.Empty);
+			if(_prevIsOpen != IsOpen){
+				OnOpenChanged (new OpenChangedEventArgs (IsOpen));
+				_prevIsOpen = IsOpen;
+			}
+		}
+
+		protected virtual void OnOpenChanged(OpenChangedEventArgs e)
+		{
+			EventHandler handler = OpenChanged;
+			if(handler != null)
+			{
+				handler (this, e);
+			}
+		}
+
 		public void DragContentView(UIGestureRecognizer gesture)
 		{
 			var panGesture = gesture as UIPanGestureRecognizer;
@@ -350,6 +395,7 @@ namespace FlyoutNavigation
 			var translation = panGesture.TranslationInView(View).X;
 			if (panGesture.State == UIGestureRecognizerState.Began)
 			{
+				OnBeginAnimation (EventArgs.Empty);
 				startX = frame.X;
 			}
 			else if (panGesture.State == UIGestureRecognizerState.Changed)
@@ -484,18 +530,25 @@ namespace FlyoutNavigation
 						//menuBorder.Frame.Width = 1f;
 						View.InsertSubviewBelow(menuBorder, mainView);
 					}
-					UIView.BeginAnimations("slideMenu");
+
+				});
+
+			OnBeginAnimation (EventArgs.Empty);
+			UIView.Animate(.2,	() =>
+				{
 					UIView.SetAnimationCurve(UIViewAnimationCurve.EaseIn);
-					//UIView.SetAnimationDuration(2);
-					setViewSize();
 					CGRect frame = mainView.Frame;
 					frame.X = Position == FlyOutNavigationPosition.Left ? menuWidth : -menuWidth;
-					SetLocation(frame);
 					setViewSize();
-					frame = mainView.Frame;
+					SetLocation(frame);
 					shadowView.Frame = frame;
-					UIView.CommitAnimations();
-				});
+				}, showComplete);
+
+		}
+			
+		void showComplete()
+		{
+			CheckRaiseOpenChanged ();
 		}
 
 		void setViewSize()
@@ -512,13 +565,13 @@ namespace FlyoutNavigation
 		{
 			CGRect frame = View.Bounds;
 			if ((InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)) {
-				#if __UNIFIED__
+				#if UNIFIED || __UNIFIED__
 				var width = NMath.Max (frame.Width, frame.Height);
 				#else
 				var width = Math.Max(frame.Width, frame.Height);
 				#endif
 
-				#if __UNIFIED__
+				#if UNIFIED || __UNIFIED__
 				var height = NMath.Min (frame.Width, frame.Height);
 				#else
 				var height = Math.Min(frame.Width, frame.Height);
@@ -596,8 +649,9 @@ namespace FlyoutNavigation
 		[Export("animationEnded")]
 		void hideComplete()
 		{
-			//shadowView.RemoveFromSuperview();
-			//navigation.View.Hidden = true;
+			shadowView.RemoveFromSuperview();
+			navigation.View.Hidden = true;
+			CheckRaiseOpenChanged ();
 		}
 
 		public void ResignFirstResponders(UIView view)
