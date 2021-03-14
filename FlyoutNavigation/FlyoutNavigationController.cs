@@ -128,6 +128,13 @@ namespace FlyoutNavigation
 
 		public bool NavigationOpenedByLandscapeRotation { get; private set; }
 
+
+		public bool GestureIsEnabled
+		{
+			get => openGesture.Enabled;
+			set => openGesture.Enabled = closeGesture.Enabled = value;
+		}
+
 		public bool HideShadow
 		{
 			get { return hideShadow; }
@@ -443,7 +450,6 @@ namespace FlyoutNavigation
 				navFrame.X = mainView.Frame.Width - menuWidth;
 			navFrame.Location = CGPoint.Empty;
 			navigation.View.Frame = navFrame;
-			Console.WriteLine(navFrame);
 			View.BackgroundColor = NavigationTableView.BackgroundColor;
 			var frame = mainView.Frame;
 			setViewSize ();
